@@ -251,6 +251,27 @@ namespace HomeFridgev1.Controllers
             };
         }
 
+        [AllowAnonymous]
+        [HttpGet("/Home/ResetPasswordTemp")]
+        public async Task<IActionResult> ResetPasswordTemp()
+        {
+            var user = await _userManager.FindByEmailAsync("user@homefridge.vn");
+            if (user == null)
+            {
+                return Content("Không tìm thấy tài khoản user@homefridge.vn!");
+            }
+
+            user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, "Password123!");
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                return Content("Đặt lại mật khẩu thành công! Mật khẩu mới của bạn là: Password123!");
+            }
+
+            return Content("Lỗi: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+
         public IActionResult Privacy()
         {
             return View();
