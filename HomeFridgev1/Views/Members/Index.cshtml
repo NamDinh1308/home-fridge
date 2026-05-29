@@ -1,0 +1,181 @@
+@model HomeFridgev1.Models.ViewModels.MemberIndexViewModel
+
+@{
+    ViewData["Title"] = "Thành viên";
+    var currentActiveMember = Model.Items.FirstOrDefault(i => i.IsCurrentMember);
+    var isCurrentMemberOwner = currentActiveMember != null && currentActiveMember.Role == HomeFridgev1.Models.Enums.MemberRole.Owner;
+}
+
+<div class="max-w-6xl mx-auto px-8 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 font-headline">Thành viên gia đình</h1>
+            <p class="mt-2 text-slate-600 text-sm">Quản lý các thành viên trong household và chọn người đang sử dụng hệ thống.</p>
+        </div>
+
+        @if (isCurrentMemberOwner)
+        {
+            <a asp-action="Create"
+               class="inline-flex items-center justify-center rounded-[1.25rem] bg-primary hover:bg-emerald-600 text-white px-6 py-2.5 font-bold transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] hover:-translate-y-0.5">
+                <span class="material-symbols-outlined mr-2 text-xl">person_add</span>
+                Thêm thành viên
+            </a>
+        }
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="mb-6 rounded-[1.25rem] border border-green-200 bg-green-50 px-5 py-4 text-green-700 text-sm font-medium shadow-sm">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="mb-6 rounded-[1.25rem] border border-red-200 bg-red-50 px-5 py-4 text-red-700 text-sm font-medium shadow-sm">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 transition-all hover:shadow-md hover:-translate-y-1 hover:border-emerald-100">
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Tổng thành viên</div>
+            <div class="mt-3 text-3xl font-black text-slate-900 font-headline">@Model.TotalMembers</div>
+        </div>
+        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 transition-all hover:shadow-md hover:-translate-y-1 hover:border-emerald-100">
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Đang hoạt động</div>
+            <div class="mt-3 text-3xl font-black text-slate-900 font-headline">@Model.ActiveMembers</div>
+        </div>
+        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 transition-all hover:shadow-md hover:-translate-y-1 hover:border-emerald-100">
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Chủ household</div>
+            <div class="mt-3 text-lg font-bold text-slate-900 font-headline">@(string.IsNullOrWhiteSpace(Model.OwnerName) ? "Chưa xác định" : Model.OwnerName)</div>
+        </div>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-12 text-center">
+            <div class="w-16 h-16 mx-auto bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-400">
+                <span class="material-symbols-outlined text-3xl">groups</span>
+            </div>
+            <h2 class="text-lg font-semibold text-slate-700 font-headline">Chưa có thành viên nào</h2>
+            <p class="mt-2 text-slate-500 text-sm">Hãy thêm thành viên đầu tiên để bắt đầu quản lý lịch sử thao tác trong gia đình.</p>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            @foreach (var item in Model.Items)
+            {
+                var roleClass = item.Role.ToString() switch
+                {
+                    "Owner" => "bg-orange-50 text-orange-700 border border-orange-200",
+                    "Admin" => "bg-blue-50 text-blue-700 border border-blue-200",
+                    _ => "bg-slate-100 text-slate-700 border border-slate-200"
+                };
+
+                <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 flex flex-col transition-all hover:-translate-y-1 hover:shadow-md hover:border-emerald-100">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-4 min-w-0">
+                            @if (!string.IsNullOrWhiteSpace(item.AvatarPath))
+                            {
+                                <div class="w-16 h-16 rounded-full overflow-hidden border border-slate-200 bg-slate-50 shrink-0">
+                                    <img src="@item.AvatarPath" alt="@item.DisplayName" class="w-full h-full object-cover" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="w-16 h-16 rounded-full bg-[#f0fdf4] border border-[#bbf7d0] flex items-center justify-center text-[#00d67d] text-xl font-extrabold shrink-0">
+                                    @(string.IsNullOrWhiteSpace(item.DisplayName) ? "?" : item.DisplayName.Substring(0, 1).ToUpper())
+                                </div>
+                            }
+
+                            <div class="min-w-0">
+                                <div class="text-lg font-bold text-slate-800 font-headline truncate">@item.DisplayName</div>
+                                <div class="mt-2 inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider @roleClass">
+                                    @item.Role
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (item.IsCurrentMember)
+                        {
+                            <span class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 text-[11px] font-bold uppercase tracking-wider shrink-0">
+                                Đang chọn
+                            </span>
+                        }
+                    </div>
+
+                    <div class="mt-5 space-y-2 text-sm text-slate-600">
+                        <div>
+                            <span class="font-medium text-slate-700">Email:</span>
+                            @(string.IsNullOrWhiteSpace(item.Email) ? " Chưa cập nhật" : $" {item.Email}")
+                        </div>
+                        <div>
+                            <span class="font-medium text-slate-700">Thông báo email:</span>
+                            @(item.ReceiveEmailNotification ? " Bật" : " Tắt")
+                        </div>
+                        <div>
+                            <span class="font-medium text-slate-700">Cảnh báo hạn dùng:</span>
+                            @(item.ReceiveExpiryNotification ? " Bật" : " Tắt")
+                        </div>
+                        <div>
+                            <span class="font-medium text-slate-700">Cảnh báo hết hàng:</span>
+                            @(item.ReceiveOutOfStockNotification ? " Bật" : " Tắt")
+                        </div>
+                        <div>
+                            <span class="font-medium text-slate-700">Trạng thái:</span>
+                            @(item.IsActive ? " Đang hoạt động" : " Ngừng hoạt động")
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex flex-wrap gap-3 pt-4 border-t border-slate-100">
+                        @if (item.IsActive && !item.IsCurrentMember)
+                        {
+                            <form asp-action="Select" method="post" class="inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit"
+                                        class="inline-flex items-center justify-center rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700 hover:bg-emerald-100 transition-all">
+                                    <span class="material-symbols-outlined text-[18px] mr-1">how_to_reg</span>
+                                    Chọn sử dụng
+                                </button>
+                            </form>
+                        }
+                        else if (item.IsCurrentMember)
+                        {
+                            <div class="inline-flex items-center justify-center rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
+                                <span class="material-symbols-outlined text-[18px] mr-1">done</span>
+                                Đang sử dụng
+                            </div>
+                        }
+
+                        @if (isCurrentMemberOwner)
+                        {
+                            <a asp-action="Edit"
+                               asp-route-id="@item.Id"
+                               class="inline-flex items-center justify-center rounded-[1.25rem] border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all">
+                                <span class="material-symbols-outlined text-[18px] mr-1">edit</span>
+                                Sửa
+                            </a>
+                        }
+
+                        @if (isCurrentMemberOwner && item.Role != HomeFridgev1.Models.Enums.MemberRole.Owner && item.IsActive)
+                        {
+                            <form asp-action="Deactivate" method="post" class="inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit"
+                                        class="inline-flex items-center justify-center rounded-[1.25rem] border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 hover:bg-red-100 transition-all"
+                                        onclick="return confirm('Bạn có chắc muốn ngừng hoạt động thành viên này không?');">
+                                    <span class="material-symbols-outlined text-[18px] mr-1">person_off</span>
+                                    Ngừng hoạt động
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

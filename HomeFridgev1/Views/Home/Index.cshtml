@@ -1,0 +1,399 @@
+@{
+    Layout = null;
+    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+
+    var dashboardUrl = isAuthenticated
+        ? Url.Action("Dashboard", "Home")
+        : Url.Page("/Account/Login", new { area = "Identity", ReturnUrl = Url.Action("Dashboard", "Home") });
+
+    var addFoodUrl = isAuthenticated
+        ? Url.Action("Create", "Food")
+        : Url.Page("/Account/Login", new { area = "Identity", ReturnUrl = Url.Action("Create", "Food") });
+
+    var foodListUrl = isAuthenticated
+        ? Url.Action("Index", "Food")
+        : Url.Page("/Account/Login", new { area = "Identity", ReturnUrl = Url.Action("Index", "Food") });
+
+    var selectMemberUrl = isAuthenticated
+        ? Url.Action("Select", "Members")
+        : Url.Page("/Account/Login", new { area = "Identity", ReturnUrl = Url.Action("Select", "Members") });
+
+    var membersUrl = isAuthenticated
+        ? Url.Action("Index", "Members")
+        : Url.Page("/Account/Login", new { area = "Identity", ReturnUrl = Url.Action("Index", "Members") });
+}
+
+<!DOCTYPE html>
+<html class="light" lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Home's Fridge - Quản lý thực phẩm thông minh</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#a7f3d0", // emerald-200
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#64748b", // slate-500
+                        "on-background": "#0f172a", // slate-900
+                        "surface-container-low": "#f8fafc", // slate-50
+                        "primary": "#10b981", // emerald-500
+                        "on-primary-container": "#064e3b", // emerald-900
+                        "outline-variant": "#e2e8f0", // slate-200
+                        "on-surface": "#1e293b", // slate-800
+                        "surface": "#f8fafc" // slate-50
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans", "sans-serif"],
+                        "body": ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Manrope', sans-serif; }
+        h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
+        a { text-decoration: none !important; }
+    </style>
+</head>
+<body class="bg-[#f1f5f9] text-on-surface selection:bg-primary-container">
+
+<header class="bg-white/40 backdrop-blur-2xl flex justify-between items-center w-full px-4 md:px-8 py-3 fixed top-0 z-50 shadow-[0_2px_24px_rgba(0,0,0,0.06)] border-b border-white/30">
+    <a asp-controller="Home" asp-action="Index" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">kitchen</span>
+        <span class="text-xl font-black text-[#131b2e] tracking-tight font-headline">Home's Fridge</span>
+    </a>
+    
+    <!-- Desktop navigation -->
+    <div class="hidden md:flex gap-8 items-center">
+        <nav class="flex gap-6 text-sm font-semibold">
+            <a class="text-emerald-500 font-bold font-headline tracking-tight transition-colors rounded-full px-3 py-1 hover:bg-[#f2f3ff]" asp-controller="Home" asp-action="Index">Home</a>
+            <a class="text-[#3b4b3e] font-headline tracking-tight transition-colors rounded-full px-3 py-1 hover:bg-[#f2f3ff]" asp-controller="Food" asp-action="Index">Fridge</a>
+            <a class="text-[#3b4b3e] font-headline tracking-tight transition-colors rounded-full px-3 py-1 hover:bg-[#f2f3ff]" asp-controller="Members" asp-action="Index">Members</a>
+        </nav>
+        <div class="flex gap-2 items-center">
+            <!-- Interactive notification bell -->
+            <div class="relative" id="notification-bell-wrapper">
+                <button type="button" id="notification-bell-button" class="material-symbols-outlined p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer text-[24px] flex items-center justify-center">
+                    notifications
+                </button>
+                <div id="notification-bell-panel" class="hidden absolute right-0 top-full mt-3 w-[300px] rounded-[24px] border border-slate-100 bg-white p-5 shadow-2xl z-50">
+                    <div class="flex flex-col items-center py-4 text-center">
+                        <span class="material-symbols-outlined text-[36px] text-slate-300 mb-2">notifications_off</span>
+                        <p class="text-sm font-bold text-slate-700">Không có thông báo mới</p>
+                        <p class="text-xs text-slate-400 mt-1">Chúng tôi sẽ báo cho bạn khi có thay đổi về thực phẩm.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ml-2">
+                <partial name="_TopNavLoginPartial" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile navigation login buttons -->
+    <div class="flex md:hidden items-center gap-2">
+        <partial name="_TopNavLoginPartial" />
+    </div>
+</header>
+
+<main class="pt-16 bg-[#f1f5f9] min-h-screen">
+    <div class="max-w-[1208px] mx-auto bg-white border-l border-r border-slate-200/80 shadow-[0_0_50px_rgba(0,0,0,0.08)] min-h-[calc(100vh-64px)] px-6 md:px-20 py-12 md:py-16">
+        <!-- DASHBOARD Section (Always visible) -->
+        <section class="mb-20 md:mb-24">
+        <div class="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary-container/60 to-transparent p-6 md:p-16 mb-12 md:mb-16 shadow-sm border border-slate-100">
+        <div class="relative z-10 max-w-2xl">
+            <div class="inline-flex items-center gap-2 rounded-full bg-white/75 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-on-primary-container shadow-sm backdrop-blur">
+                <span class="h-2.5 w-2.5 rounded-full bg-primary inline-block"></span>
+                @(isAuthenticated ? "Khu vực điều hướng nhanh" : "Bắt đầu cùng Home's Fridge")
+            </div>
+
+            <h1 class="text-2xl md:text-4xl font-extrabold tracking-tight text-on-background mt-6 mb-4 font-headline leading-tight">
+                @(isAuthenticated ? "Chào mừng trở lại!" : "Quản lý tủ lạnh thông minh!")
+            </h1>
+
+            <p class="text-base md:text-lg text-on-surface-variant font-medium max-w-2xl leading-relaxed">
+                @(isAuthenticated
+                    ? "Bạn muốn làm gì hôm nay? Mở trang tổng quan để xem nhanh toàn cảnh kho thực phẩm, cảnh báo và hoạt động gần đây."
+                    : "Bắt đầu hành trình quản lý thực phẩm gia đình gọn gàng hơn, trực quan hơn và ít lãng phí hơn.")
+            </p>
+
+            <div class="mt-8">
+                <a href="@dashboardUrl"
+                class="inline-flex items-center justify-center rounded-2xl bg-primary px-6 py-3.5 font-bold text-white hover:bg-emerald-600 transition-all shadow-[0_15px_30px_-10px_rgba(16,185,129,0.4)] hover:-translate-y-1">
+                    <span class="material-symbols-outlined mr-2 text-[20px]">dashboard</span>
+                    Xem tổng quan
+                </a>
+            </div>
+        </div>
+
+        <div class="absolute -right-20 -top-20 w-80 h-80 bg-primary/20 blur-[120px] rounded-full"></div>
+
+        <div class="absolute right-8 bottom-8 hidden lg:flex">
+            <div class="rounded-2xl bg-white/75 px-4 py-3 shadow-sm backdrop-blur border border-white/60">
+                <div class="text-xs uppercase tracking-widest text-on-surface-variant font-bold">Gợi ý hôm nay</div>
+                <div class="mt-1 text-sm font-semibold text-slate-900">Mở trang tổng quan để xem món cần ưu tiên xử lý.</div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Bento Action Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+            <!-- Add Food Card -->
+            <a class="group relative overflow-hidden bg-surface-container-lowest rounded-3xl p-6 md:p-10 transition-all hover:-translate-y-2 shadow-sm border border-slate-100 block hover:shadow-xl hover:border-emerald-200"
+               href="@addFoodUrl">
+                <div class="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <span class="material-symbols-outlined text-7xl">add_circle</span>
+                </div>
+                <div class="relative z-10">
+                    <div class="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mb-6 group-hover:bg-primary-container group-hover:shadow-[0_10px_20px_-5px_rgba(16,185,129,0.2)] group-hover:scale-110 transition-all duration-300">
+                        <span class="material-symbols-outlined text-slate-500 group-hover:text-on-primary-container text-2xl transition-colors duration-300">add</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 font-headline text-slate-900">Thêm thực phẩm</h3>
+                    <p class="text-slate-500 text-xs leading-relaxed">Cập nhật nhanh các nguyên liệu mới nhập về tủ lạnh của bạn.</p>
+                </div>
+            </a>
+
+            <!-- Food List Card -->
+            <a class="group relative overflow-hidden bg-surface-container-lowest rounded-3xl p-6 md:p-10 transition-all hover:-translate-y-2 shadow-sm border border-slate-100 block hover:shadow-xl hover:border-emerald-200"
+               href="@foodListUrl">
+                <div class="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <span class="material-symbols-outlined text-7xl">kitchen</span>
+                </div>
+                <div class="relative z-10">
+                    <div class="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mb-6 group-hover:bg-primary-container transition-colors duration-300">
+                        <span class="material-symbols-outlined text-primary text-2xl">list_alt</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 font-headline text-slate-900">Danh sách thực phẩm</h3>
+                    <p class="text-slate-500 text-xs leading-relaxed">Kiểm tra số lượng và theo dõi hạn sử dụng thông minh.</p>
+                </div>
+            </a>
+
+            <!-- Members Card -->
+            <a class="group relative overflow-hidden bg-surface-container-lowest rounded-3xl p-6 md:p-10 transition-all hover:-translate-y-2 shadow-sm border border-slate-100 block hover:shadow-xl hover:border-emerald-200"
+               href="@selectMemberUrl">
+                <div class="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <span class="material-symbols-outlined text-7xl">group</span>
+                </div>
+                <div class="relative z-10">
+                    <div class="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mb-6 group-hover:bg-primary-container transition-colors duration-300">
+                        <span class="material-symbols-outlined text-slate-500 group-hover:text-primary text-2xl transition-colors duration-300">switch_account</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 font-headline text-slate-900">Đổi thành viên</h3>
+                    <p class="text-slate-500 text-xs leading-relaxed">Chuyển đổi giữa các thành viên trong gia đình để gắn lịch sử.</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Quick Start Steps -->
+        <div class="mt-20 md:mt-28">
+            <h2 class="text-xl md:text-2xl font-extrabold mb-8 md:mb-16 text-center font-headline text-slate-900">Bắt đầu nhanh trong 3 bước</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 relative">
+                <!-- Step 1 -->
+                <div class="flex flex-col items-center text-center px-4 md:px-10 relative z-10">
+                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center border-4 border-primary-container font-bold text-lg mb-5 shadow-sm text-slate-900">1</div>
+                    <h4 class="font-bold text-base mb-2 font-headline text-slate-900">Thêm thực phẩm</h4>
+                    <p class="text-xs text-on-surface-variant">Quét mã hoặc nhập tay thực phẩm mới mua.</p>
+                </div>
+                <!-- Step 2 -->
+                <div class="flex flex-col items-center text-center px-4 md:px-10 relative z-10">
+                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center border-4 border-primary-container font-bold text-lg mb-5 shadow-sm text-slate-900">2</div>
+                    <h4 class="font-bold text-base mb-2 font-headline text-slate-900">Kiểm tra tủ lạnh</h4>
+                    <p class="text-xs text-on-surface-variant">Theo dõi hạn dùng để tránh lãng phí đồ ăn.</p>
+                </div>
+                <!-- Step 3 -->
+                <div class="flex flex-col items-center text-center px-4 md:px-10 relative z-10">
+                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center border-4 border-primary-container font-bold text-lg mb-5 shadow-sm text-slate-900">3</div>
+                    <h4 class="font-bold text-base mb-2 font-headline text-slate-900">Quản lý gia đình</h4>
+                    <p class="text-xs text-on-surface-variant">Chia sẻ quyền quản lý cho cả gia đình.</p>
+                </div>
+                <!-- Connecting line -->
+                <div class="hidden md:block absolute top-6 left-[16%] right-[16%] h-[2px] bg-primary-container/70 z-0"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LANDING Section -->
+    <section class="border-t border-slate-100 pt-16 md:pt-24">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center">
+            <div>
+                <span class="inline-block px-3 py-1 rounded-full bg-primary-container/50 text-on-primary-container font-bold text-[10px] uppercase tracking-widest mb-6">Xu hướng nhà thông minh</span>
+                <h1 class="text-3xl md:text-5xl font-black tracking-tight text-on-background mb-6 leading-[1.1] font-headline">Home's Fridge</h1>
+                <p class="text-base md:text-lg text-on-surface-variant mb-8 md:mb-10 leading-relaxed max-w-md">
+                    Quản lý thực phẩm gia đình thông minh theo số lượng và hạn sử dụng. Giảm lãng phí, tiết kiệm thời gian.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a asp-area="Identity" asp-page="/Account/Login" class="bg-primary-container text-on-primary-container px-8 py-3 rounded-2xl font-bold text-base hover:brightness-105 transition-all shadow-[0_15px_30px_-10px_rgba(0,255,149,0.4)] inline-block">Đăng nhập</a>
+                    <a asp-area="Identity" asp-page="/Account/Register" class="border-2 border-slate-200 text-on-surface px-8 py-3 rounded-2xl font-bold text-base hover:bg-surface-container-low hover:border-slate-300 transition-all inline-block">Đăng ký</a>
+                </div>
+            </div>
+            <div class="relative">
+                <div class="rounded-3xl overflow-hidden shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] border border-slate-100">
+                    <img class="w-full h-[280px] md:h-[400px] object-cover" alt="modern organized refrigerator interior with fresh vegetables and fruits in clear containers soft morning light kitchen aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6s1MyBNlacWZcQanRo9SP3dPkudk2yUJ1V65siJIvLWspj6_zOgNbnS9Lru0i3U71wvzorlTqeFZitg-2DIZVeLek8UcjsZXP5-go_8HkNng5tPBRzSEe7gig1Wk_YCxsUYYHokA6uzZxKGJ7mmTy0L5YZ4VDCCXsyEDwTrgUEwMXpUd9qIpc25bd2C9JJizrt2-r8becEmf7AD_aTvXi8ySHN0Fsf8hw6w85UdbcyLihpwKxI0KvthEqgXm1yaakR1q9rcSdvjEg" />
+                </div>
+                <div class="absolute -bottom-6 -left-4 md:left-auto md:-right-6 bg-white p-4 md:p-5 rounded-2xl shadow-xl max-w-[220px] md:max-w-[240px] border border-slate-100 z-10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></div>
+                        <span class="text-xs font-bold text-slate-900 font-headline">Sắp hết hạn!</span>
+                    </div>
+                    <p class="text-[11px] text-on-surface-variant leading-relaxed">Sữa tươi Vinamilk còn 1 ngày sử dụng. Hãy dùng ngay!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="mt-20 md:mt-40 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+            <div class="bg-surface-container-low p-6 md:p-12 rounded-3xl hover:bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-slate-100">
+                <div class="w-14 h-14 bg-primary-container/70 rounded-2xl flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-3xl text-primary">hub</span>
+                </div>
+                <h3 class="text-xl font-bold mb-4 font-headline text-slate-900">Quản lý tập trung</h3>
+                <p class="text-on-surface-variant text-sm leading-relaxed">Mọi thứ trong tủ lạnh đều nằm trong lòng bàn tay bạn, từ rau củ đến thực phẩm khô.</p>
+            </div>
+            <div class="bg-surface-container-low p-6 md:p-12 rounded-3xl hover:bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-slate-100">
+                <div class="w-14 h-14 bg-primary-container/70 rounded-2xl flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-3xl text-primary">alarm</span>
+                </div>
+                <h3 class="text-xl font-bold mb-4 font-headline text-slate-900">Theo dõi hạn sử dụng</h3>
+                <p class="text-on-surface-variant text-sm leading-relaxed">Nhận thông báo thông minh khi thực phẩm sắp đến ngày hết hạn để tránh lãng phí.</p>
+            </div>
+            <div class="bg-surface-container-low p-6 md:p-12 rounded-3xl hover:bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-slate-100">
+                <div class="w-14 h-14 bg-primary-container/70 rounded-2xl flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-3xl text-primary">history_edu</span>
+                </div>
+                <h3 class="text-xl font-bold mb-4 font-headline text-slate-900">Gắn lịch sử thành viên</h3>
+                <p class="text-on-surface-variant text-sm leading-relaxed">Biết chính xác ai đã thêm, ai đã sử dụng thực phẩm trong gia đình bạn.</p>
+            </div>
+        </div>
+    </section>
+
+    </div>
+</main>
+
+<!-- FOOTER Section - Full width, outside content container -->
+<footer class="bg-white w-full border-t border-slate-200/60 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] relative z-10">
+    <div class="max-w-[1208px] mx-auto px-6 md:px-20 pt-12 pb-8">
+        <!-- Main Footer Content: 4 Columns Flex -->
+        <div class="flex flex-col md:flex-row justify-between gap-8 mb-12 items-start w-full">
+            <!-- 1. Brand Section -->
+            <div class="space-y-4 max-w-[280px] w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-[30px]" style="font-variation-settings: 'FILL' 1;">kitchen</span>
+                    <span class="text-xl font-bold text-[#131b2e] tracking-tight font-headline">Home's Fridge</span>
+                </div>
+                <p class="text-[13px] text-slate-500 leading-relaxed">
+                    Quản lý thực phẩm trong gia đình dễ dàng hơn. Theo dõi hạn sử dụng và giảm lãng phí mỗi ngày.
+                </p>
+                <p class="text-[11px] text-slate-400 italic">
+                    "Gia đình ấm cúng bắt đầu từ căn bếp gọn gàng."
+                </p>
+            </div>
+            
+            <!-- 2. Features Column -->
+            <div class="space-y-4">
+                <h4 class="font-bold text-sm text-slate-800 font-headline uppercase tracking-wider">Tính năng</h4>
+                <ul class="space-y-3 text-[13px]">
+                    <li>
+                        <a href="@dashboardUrl" class="text-slate-500 hover:text-primary transition-colors duration-200">Tổng quan</a>
+                    </li>
+                    <li>
+                        <a href="@foodListUrl" class="text-slate-500 hover:text-primary transition-colors duration-200">Kho thực phẩm</a>
+                    </li>
+                    <li>
+                        <a href="@addFoodUrl" class="text-slate-500 hover:text-primary transition-colors duration-200">Thêm thực phẩm</a>
+                    </li>
+                    <li>
+                        <a href="@membersUrl" class="text-slate-500 hover:text-primary transition-colors duration-200">Thành viên gia đình</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- 3. Support Column -->
+            <div class="space-y-4">
+                <h4 class="font-bold text-sm text-slate-800 font-headline uppercase tracking-wider">Hỗ trợ</h4>
+                <ul class="space-y-3 text-[13px]">
+                    <li>
+                        <a href="#" class="text-slate-500 hover:text-primary transition-colors duration-200">Hướng dẫn sử dụng</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-slate-500 hover:text-primary transition-colors duration-200">Chính sách bảo mật</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-slate-500 hover:text-primary transition-colors duration-200">Điều khoản sử dụng</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- 4. Contact Column -->
+            <div class="space-y-4">
+                <h4 class="font-bold text-sm text-slate-800 font-headline uppercase tracking-wider">Liên hệ</h4>
+                <ul class="space-y-3 text-[13px]">
+                    <li>
+                        <a href="mailto:support@homefridge.vn" class="text-slate-500 hover:text-primary transition-colors duration-200 font-medium break-all">support@homefridge.vn</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Bottom Footer (Copyright & Socials) -->
+        <div class="border-t border-slate-100 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p class="text-[12px] text-slate-400 font-medium">
+                &copy; @DateTime.Now.Year Home's Fridge. Tất cả quyền được bảo lưu.
+            </p>
+            <!-- Social Icons (Facebook + Instagram) -->
+            <div class="flex gap-4 items-center">
+                <a href="#" class="text-slate-400 hover:text-[#1877F2] transition-colors duration-200" title="Facebook">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+                <a href="#" class="text-slate-400 hover:text-[#E1306C] transition-colors duration-200" title="Instagram">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051C.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    (function () {
+        const bellButton = document.getElementById('notification-bell-button');
+        const bellPanel = document.getElementById('notification-bell-panel');
+        
+        if (bellButton && bellPanel) {
+            bellButton.addEventListener('click', function (e) {
+                e.stopPropagation();
+                
+                // Close any open profile dropdowns
+                document.querySelectorAll('.account-menu-panel').forEach(panel => {
+                    panel.classList.add('hidden');
+                });
+                
+                bellPanel.classList.toggle('hidden');
+            });
+            
+            bellPanel.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+            
+            document.addEventListener('click', function () {
+                bellPanel.classList.add('hidden');
+            });
+        }
+    })();
+</script>
+</body>
+</html>

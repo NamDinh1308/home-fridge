@@ -1,0 +1,95 @@
+@model HomeFridgev1.Models.ViewModels.SelectMemberViewModel
+
+@{
+    ViewData["Title"] = "Chọn thành viên";
+}
+
+<div class="min-h-[calc(100vh-80px)] bg-[#f8fafc] flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden -mt-24">
+    
+    <!-- Background Accents -->
+    <div class="absolute top-0 right-0 w-1/3 h-1/3 bg-[#00ff95] opacity-[0.03] blur-[100px] rounded-bl-full pointer-events-none"></div>
+    <div class="absolute bottom-0 left-0 w-1/3 h-1/3 bg-[#00d67d] opacity-[0.02] blur-[100px] rounded-tr-full pointer-events-none"></div>
+
+    <div class="w-full max-w-6xl mx-auto relative z-10">
+        
+        <div class="text-center mb-16">
+            <!-- Icon nho nhỏ thay vì Logo bự -->
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-[1.25rem] bg-[#f0fdf4] text-[#00d67d] mb-6 shadow-sm border border-[#bbf7d0] ring-4 ring-[#f0fdf4]">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-[#0f172a] tracking-tight">Home's Fridge</h1>
+            <p class="text-[#64748b] mt-4 text-xl sm:text-2xl font-medium tracking-wide">Hôm nay ai đang sử dụng hệ thống?</p>
+            <p class="text-sm text-slate-400 mt-2 font-medium uppercase tracking-widest">Hộ gia đình: @Model.HouseholdName</p>
+        </div>
+
+        @if (Model.Members == null || !Model.Members.Any())
+        {
+            <div class="max-w-xl mx-auto rounded-[2rem] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#e2e8f0] p-10 text-center">
+                <div class="w-16 h-16 mx-auto bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <p class="text-[#0f172a] font-bold text-lg">Chưa có thành viên nào.</p>
+                <p class="text-[#64748b] text-sm mt-2 leading-relaxed">Dường như dữ liệu Household của bạn đang trống.<br />Vui lòng liên hệ Admin hoặc tự truy cập phần quản lý để thêm thành viên.</p>
+            </div>
+        }
+        else
+        {
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 justify-center">
+                @foreach (var member in Model.Members)
+                {
+                    <form asp-action="Select" method="post" class="w-full flex">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="memberId" value="@member.Id" />
+                        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+
+                        <button type="submit"
+                                class="group relative flex flex-col items-center w-full rounded-[2rem] border border-[#e2e8f0] bg-white p-8 text-center shadow-sm transition-all duration-300 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-2 hover:border-[#00ff95] focus:outline-none focus:ring-4 focus:ring-[#00ff95]/30 overflow-hidden">
+                            
+                            <!-- Hiệu ứng viền chạy mờ khi hover (optional styling extra) -->
+                            <div class="absolute inset-x-0 bottom-0 h-1 bg-[#00ff95] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+
+                            <!-- Avatar -->
+                            <div class="w-24 h-24 mx-auto rounded-full bg-[#f0fdf4] flex items-center justify-center text-3xl font-extrabold text-[#00d67d] border-2 border-[#bbf7d0] group-hover:bg-[#00ff95] group-hover:text-[#0f172a] group-hover:border-[#00ff95] transition-all duration-300 transform group-hover:scale-110 shadow-sm mb-6">
+                                @(string.IsNullOrWhiteSpace(member.DisplayName) ? "?" : member.DisplayName.Substring(0, 1).ToUpper())
+                            </div>
+
+                            <!-- Name -->
+                            <h2 class="text-2xl font-bold text-[#0f172a] break-words mb-3 group-hover:text-[#00d67d] transition-colors">
+                                @member.DisplayName
+                            </h2>
+
+                            <!-- Role Badge -->
+                            <div class="mb-4">
+                                @if (member.Role.Equals("Owner", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-200">
+                                        @member.Role
+                                    </span>
+                                }
+                                else if (member.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-200">
+                                        @member.Role
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                                        @member.Role
+                                    </span>
+                                }
+                            </div>
+
+                            <!-- Subtext -->
+                            <span class="text-sm font-medium text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1">
+                                Vào hệ thống
+                                <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </span>
+
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+</div>

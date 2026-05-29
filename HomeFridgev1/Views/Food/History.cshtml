@@ -1,0 +1,187 @@
+@model HomeFridgev1.Models.ViewModels.FoodHistoryViewModel
+
+@{
+    ViewData["Title"] = "Lịch sử thao tác";
+}
+
+<div class="max-w-6xl mx-auto px-8 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 font-headline">Lịch sử thao tác</h1>
+            <p class="mt-2 text-slate-600 text-sm">
+                Theo dõi toàn bộ thao tác đã thực hiện với thực phẩm trong gia đình.
+            </p>
+        </div>
+
+        <a asp-action="Index"
+           class="inline-flex items-center justify-center rounded-[1.25rem] border border-slate-200 bg-white px-6 py-2.5 font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
+            <span class="material-symbols-outlined mr-2 text-xl">arrow_back</span>
+            Về danh sách thực phẩm
+        </a>
+    </div>
+
+    <form method="get" asp-action="History"
+          class="mb-6 bg-surface-container-lowest rounded-[2rem] border border-slate-100 shadow-sm p-5">
+        <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr_auto_auto] gap-4 items-end">
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                    Tìm kiếm
+                </label>
+                <input type="text"
+                       name="searchTerm"
+                       value="@Model.SearchTerm"
+                       placeholder="Tìm theo tên thực phẩm..."
+                       class="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all" />
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                    Loại thao tác
+                </label>
+                <select name="activityType"
+                        class="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all">
+                    @foreach (var item in Model.ActivityTypeOptions)
+                    {
+                        if (Model.ActivityType == item.Value)
+                        {
+                            <option value="@item.Value" selected>@item.Text</option>
+                        }
+                        else
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <button type="submit"
+                    class="inline-flex items-center justify-center rounded-[1.25rem] bg-slate-900 hover:bg-slate-800 text-white px-5 py-3 font-bold text-sm transition-all shadow-sm hover:-translate-y-0.5">
+                <span class="material-symbols-outlined mr-2 text-[18px]">filter_alt</span>
+                Lọc
+            </button>
+
+            <a asp-action="History"
+               class="inline-flex items-center justify-center rounded-[1.25rem] border border-slate-200 bg-white px-5 py-3 font-bold text-sm text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                <span class="material-symbols-outlined mr-2 text-[18px]">restart_alt</span>
+                Xóa lọc
+            </a>
+        </div>
+    </form>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="bg-surface-container-lowest rounded-[2rem] border border-slate-100 shadow-sm p-12 text-center">
+            <div class="w-16 h-16 mx-auto bg-surface-container-low rounded-full flex items-center justify-center mb-4">
+                <span class="material-symbols-outlined text-3xl text-slate-400">history</span>
+            </div>
+            <h2 class="text-lg font-semibold text-slate-700 font-headline">Chưa có lịch sử thao tác phù hợp</h2>
+            <p class="mt-2 text-slate-500 text-sm">
+                Hãy thử đổi bộ lọc hoặc thực hiện thêm thao tác với thực phẩm.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="space-y-4">
+            @foreach (var item in Model.Items)
+            {
+                var badgeClass = item.ActivityType.ToString() switch
+                {
+                    "Create" => "bg-emerald-50 text-emerald-700 border border-emerald-200",
+                    "Adjust" => "bg-sky-50 text-sky-700 border border-sky-200",
+                    "Consume" => "bg-amber-50 text-amber-700 border border-amber-200",
+                    "Restock" => "bg-teal-50 text-teal-700 border border-teal-200",
+                    "Discard" => "bg-red-50 text-red-700 border border-red-200",
+                    "Archive" => "bg-purple-50 text-purple-700 border border-purple-200",
+                    "Restore" => "bg-indigo-50 text-indigo-700 border border-indigo-200",
+                    _ => "bg-slate-100 text-slate-700 border border-slate-200"
+                };
+
+                var actionText = item.ActivityType.ToString() switch
+                {
+                    "Create" => "Tạo mới",
+                    "Adjust" => "Chỉnh sửa",
+                    "Consume" => "Dùng bớt",
+                    "Restock" => "Bổ sung",
+                    "Discard" => "Bỏ đi",
+                    "Archive" => "Lưu trữ",
+                    "Restore" => "Khôi phục",
+                    _ => item.ActivityType.ToString()
+                };
+
+                var deltaTextClass = item.QuantityDelta switch
+                {
+                    > 0 => "text-emerald-600",
+                    < 0 => "text-red-600",
+                    _ => "text-slate-500"
+                };
+
+                <div class="bg-surface-container-lowest rounded-[2rem] border border-slate-100 shadow-sm p-5 transition-all hover:shadow-md hover:-translate-y-0.5">
+                    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        <div class="flex items-start gap-4 min-w-0">
+                            @if (!string.IsNullOrWhiteSpace(item.FoodImagePath))
+                            {
+                                <div class="h-16 w-16 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shrink-0">
+                                    <img src="@item.FoodImagePath" alt="@item.FoodName" class="h-full w-full object-cover" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="h-16 w-16 rounded-2xl border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+                                    <span class="material-symbols-outlined text-[22px]">image</span>
+                                </div>
+                            }
+
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h2 class="text-lg font-bold text-slate-800">@item.FoodName</h2>
+                                    <span class="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider @badgeClass">
+                                        @actionText
+                                    </span>
+                                </div>
+
+                                <div class="mt-2 text-sm text-slate-500">
+                                    Thực hiện bởi <span class="font-semibold text-slate-700">@item.MemberName</span>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(item.Reason))
+                                {
+                                    <div class="mt-2 text-sm text-slate-600">
+                                        <span class="font-medium text-slate-700">Lý do:</span> @item.Reason
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="text-sm text-slate-500 lg:text-right">
+                            @item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Trước thao tác</div>
+                            <div class="mt-2 text-lg font-semibold text-slate-800">
+                                @item.QuantityBefore.ToString("0.##")
+                            </div>
+                        </div>
+
+                        <div class="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Biến động</div>
+                            <div class="mt-2 text-lg font-semibold @deltaTextClass">
+                                @item.QuantityDelta.ToString("0.##")
+                            </div>
+                        </div>
+
+                        <div class="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Sau thao tác</div>
+                            <div class="mt-2 text-lg font-semibold text-slate-800">
+                                @item.QuantityAfter.ToString("0.##")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

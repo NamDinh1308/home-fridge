@@ -1,0 +1,112 @@
+@model HomeFridgev1.Models.ViewModels.RecipeListViewModel
+
+@{
+    ViewData["Title"] = "Công thức nấu ăn";
+}
+
+<div class="max-w-6xl mx-auto px-8 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 font-headline">Công thức nấu ăn</h1>
+            <p class="mt-2 text-slate-600 text-sm">Quản lý sổ tay nấu ăn và công thức chế biến của gia đình bạn.</p>
+        </div>
+
+        <div class="flex items-center gap-3 flex-wrap">
+            <a asp-action="Suggestions"
+               class="inline-flex items-center justify-center rounded-[1.25rem] border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-6 py-2.5 font-bold transition-all hover:-translate-y-0.5">
+                <span class="material-symbols-outlined mr-2 text-xl">auto_awesome</span>
+                Gợi ý món ăn thông minh
+            </a>
+            <a asp-action="Create"
+               class="inline-flex items-center justify-center rounded-[1.25rem] bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 font-bold transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] hover:-translate-y-0.5">
+                <span class="material-symbols-outlined mr-2 text-xl">add</span>
+                Thêm công thức
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="mb-6 rounded-[1.25rem] border border-green-200 bg-green-50 px-5 py-4 text-green-700 text-sm font-medium shadow-sm flex items-center gap-2">
+            <span class="material-symbols-outlined text-green-500">check_circle</span>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="mb-6 rounded-[1.25rem] border border-red-200 bg-red-50 px-5 py-4 text-red-700 text-sm font-medium shadow-sm flex items-center gap-2">
+            <span class="material-symbols-outlined text-red-500">error</span>
+            <span>@TempData["ErrorMessage"]</span>
+        </div>
+    }
+
+    @if (!Model.Recipes.Any())
+    {
+        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-12 text-center">
+            <div class="w-20 h-20 mx-auto bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-400">
+                <span class="material-symbols-outlined text-4xl">restaurant_menu</span>
+            </div>
+            <h2 class="text-xl font-bold text-slate-700 font-headline">Chưa có công thức nào</h2>
+            <p class="mt-2 text-slate-500 text-sm max-w-md mx-auto">Hãy bắt đầu thêm các công thức nấu ăn ưa thích của gia đình để hệ thống tự động đối khớp nguyên liệu trong tủ lạnh của bạn.</p>
+            <a asp-action="Create"
+               class="mt-6 inline-flex items-center justify-center rounded-[1.25rem] bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 font-bold transition-all shadow-[0_10px_20px_-10px_rgba(79,70,229,0.5)]">
+                Thêm công thức đầu tiên
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach (var recipe in Model.Recipes)
+            {
+                <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md hover:-translate-y-1">
+                    <div class="h-48 bg-slate-100 relative overflow-hidden flex items-center justify-center">
+                        @if (!string.IsNullOrEmpty(recipe.ImagePath))
+                        {
+                            <img src="@recipe.ImagePath" alt="@recipe.Name" class="w-full h-full object-cover" />
+                        }
+                        else
+                        {
+                            <div class="flex flex-col items-center justify-center text-slate-400">
+                                <span class="material-symbols-outlined text-5xl mb-2">dinner_dining</span>
+                                <span class="text-xs uppercase font-bold tracking-wider text-slate-400">Không có hình ảnh</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-lg font-bold text-slate-800 font-headline mb-2">@recipe.Name</h3>
+                        <p class="text-slate-500 text-xs line-clamp-3 mb-4 flex-grow">
+                            @(string.IsNullOrWhiteSpace(recipe.Description) ? "Không có mô tả chi tiết." : recipe.Description)
+                        </p>
+
+                        <div class="border-t border-slate-100 pt-4 mb-4 flex items-center justify-between text-xs text-slate-500">
+                            <span class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm text-slate-400">grocery</span>
+                                @recipe.Ingredients.Count nguyên liệu
+                            </span>
+                            <span>Đã thêm @recipe.CreatedAt.ToString("dd/MM/yyyy")</span>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 mt-auto">
+                            <a asp-action="Edit" asp-route-id="@recipe.Id"
+                               class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all">
+                                <span class="material-symbols-outlined text-[16px] mr-1">edit</span>
+                                Sửa
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@recipe.Id" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa công thức món ăn này không?');" class="inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        class="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-xs font-bold text-red-700 hover:bg-red-100 transition-all">
+                                    <span class="material-symbols-outlined text-[16px] mr-1">delete</span>
+                                    Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,125 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var userEmail = currentUser?.Email ?? User.Identity?.Name ?? "Tài khoản";
+
+    <div class="relative account-menu-container">
+        <button type="button"
+                class="account-menu-button inline-flex items-center justify-center h-10 w-10 rounded-full border-2 border-[#00ff95] bg-teal-100 text-teal-700 hover:opacity-80 transition shadow-sm overflow-hidden">
+            <span class="material-symbols-outlined text-[24px]">person</span>
+        </button>
+
+        <div class="account-menu-panel hidden absolute right-0 top-full mt-3 w-[320px] rounded-[32px] border border-slate-100 bg-white shadow-2xl z-50 overflow-hidden">
+            
+            <div class="flex flex-col items-center pt-8 pb-4">
+                <div class="h-[72px] w-[72px] rounded-full bg-teal-100 text-teal-700 flex items-center justify-center mb-4 shadow-sm border-2 border-white ring-2 ring-slate-50">
+                    <span class="material-symbols-outlined text-[40px]">person</span>
+                </div>
+                
+                <h3 class="text-xl font-bold text-slate-800 mb-1">@userEmail.Split('@')[0]</h3>
+                <p class="text-sm font-medium text-slate-500 mb-5">@userEmail</p>
+
+                <!-- Current Member Badge placeholder -->
+                <div class="inline-flex items-center gap-2 bg-[#f4f3ff] text-slate-700 px-4 py-2 rounded-2xl text-sm font-semibold">
+                    <span class="material-symbols-outlined text-[18px]">home</span>
+                    <span>Current Member : Home</span>
+                </div>
+            </div>
+
+            <div class="px-4 py-2 space-y-1">
+                <a asp-controller="Home"
+                   asp-action="Dashboard"
+                   class="flex items-center gap-4 rounded-2xl px-4 py-3.5 text-[15px] font-bold text-slate-700 hover:bg-slate-50 transition">
+                    <span class="material-symbols-outlined text-[22px] text-slate-700">grid_view</span>
+                    Dashboard
+                </a>
+
+                <a asp-controller="Members"
+                   asp-action="Select"
+                   class="flex items-center gap-4 rounded-2xl px-4 py-3.5 text-[15px] font-bold text-slate-700 hover:bg-slate-50 transition">
+                    <span class="material-symbols-outlined text-[22px] text-slate-700">switch_account</span>
+                    Switch Member
+                </a>
+            </div>
+
+            <div class="px-4 pb-4 mt-2">
+                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                    <button type="submit"
+                            class="w-full flex items-center gap-4 rounded-2xl bg-[#fff5f5] px-4 py-4 text-[15px] font-bold text-red-600 hover:bg-red-50 transition">
+                        <span class="material-symbols-outlined text-[22px] text-red-600">logout</span>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const containers = document.querySelectorAll('.account-menu-container');
+            
+            containers.forEach(container => {
+                const button = container.querySelector('.account-menu-button');
+                const panel = container.querySelector('.account-menu-panel');
+                
+                if (!button || !panel) return;
+                
+                // Prevent duplicate listeners from double toggling when partial is rendered multiple times
+                if (button.dataset.listenerBound === "true") return;
+                button.dataset.listenerBound = "true";
+
+                button.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    
+                    // Close other menus
+                    document.querySelectorAll('.account-menu-panel').forEach(otherPanel => {
+                        if (otherPanel !== panel) {
+                            otherPanel.classList.add('hidden');
+                        }
+                    });
+                    
+                    // Close notifications if open
+                    const bellPanel = document.getElementById('notification-bell-panel');
+                    if (bellPanel) {
+                        bellPanel.classList.add('hidden');
+                    }
+                    
+                    panel.classList.toggle('hidden');
+                });
+
+                panel.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+            });
+
+            // Global click handler to close all panels, bound only once globally on the document
+            if (document.datasetGlobalClickBound !== "true") {
+                document.datasetGlobalClickBound = "true";
+                document.addEventListener('click', function () {
+                    document.querySelectorAll('.account-menu-panel').forEach(panel => {
+                        panel.classList.add('hidden');
+                    });
+                });
+            }
+        })();
+    </script>
+}
+else
+{
+    <div class="flex items-center gap-3">
+        <a asp-area="Identity"
+           asp-page="/Account/Register"
+           class="text-sm font-medium text-slate-700 hover:text-slate-900 transition">
+            Đăng ký
+        </a>
+        <a asp-area="Identity"
+           asp-page="/Account/Login"
+           class="inline-flex items-center justify-center rounded-2xl bg-[#00ff95] px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-[#00e686] transition shadow-sm">
+            Đăng nhập
+        </a>
+    </div>
+}

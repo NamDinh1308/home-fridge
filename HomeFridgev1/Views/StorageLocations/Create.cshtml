@@ -1,0 +1,67 @@
+@model HomeFridgev1.Models.ViewModels.StorageLocationFormViewModel
+
+@{
+    ViewData["Title"] = "Thêm vị trí lưu trữ";
+}
+
+<div class="max-w-3xl mx-auto px-8 py-8">
+    <div class="mb-8">
+        <a asp-action="Index" class="inline-flex items-center text-slate-500 hover:text-slate-700 font-semibold mb-4 transition-colors">
+            <span class="material-symbols-outlined text-[18px] mr-1">arrow_back</span>
+            Quay lại danh sách
+        </a>
+        <h1 class="text-2xl font-bold text-slate-800 font-headline">Thêm vị trí lưu trữ mới</h1>
+        <p class="mt-2 text-slate-600 text-sm">Tạo vị trí lưu trữ mới cho thực phẩm trong gia đình của bạn.</p>
+    </div>
+
+    <form asp-action="Create" method="post" class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-6">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm"></div>
+
+        <div class="space-y-4">
+            <div>
+                <label asp-for="Name" class="block text-sm font-medium text-slate-700 mb-2">Tên vị trí</label>
+                <input asp-for="Name" class="w-full rounded-[1.25rem] border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00ff95]" placeholder="Ví dụ: Tủ lạnh mini, Kệ gia vị..." />
+                <span asp-validation-for="Name" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div>
+                <label asp-for="Description" class="block text-sm font-medium text-slate-700 mb-2">Mô tả</label>
+                <textarea asp-for="Description" rows="3" class="w-full rounded-[1.25rem] border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00ff95]" placeholder="Mô tả ngắn gọn về vị trí lưu trữ này..."></textarea>
+                <span asp-validation-for="Description" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label asp-for="SortOrder" class="block text-sm font-medium text-slate-700 mb-2">Thứ tự sắp xếp</label>
+                    <input asp-for="SortOrder" type="number" class="w-full rounded-[1.25rem] border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00ff95]" />
+                    <span asp-validation-for="SortOrder" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div class="flex items-center pt-8">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input asp-for="IsActive" class="rounded border-slate-300 text-emerald-500 focus:ring-emerald-400 h-5 w-5" />
+                        <span class="font-medium text-slate-800">Đang hoạt động</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button type="submit"
+                    class="inline-flex items-center justify-center rounded-[1.25rem] bg-primary hover:bg-emerald-600 text-white px-6 py-3 font-bold transition-all shadow-sm">
+                <span class="material-symbols-outlined mr-2 text-[18px]">save</span>
+                Lưu vị trí
+            </button>
+
+            <a asp-action="Index"
+               class="inline-flex items-center justify-center rounded-[1.25rem] border border-slate-300 bg-white px-6 py-3 font-bold text-slate-700 hover:bg-slate-50 transition-all">
+                Hủy bỏ
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

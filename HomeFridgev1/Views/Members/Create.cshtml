@@ -1,0 +1,153 @@
+@model HomeFridgev1.Models.ViewModels.MemberFormViewModel
+
+@{
+    ViewData["Title"] = "Thêm thành viên";
+}
+
+<div class="max-w-3xl mx-auto px-8 py-8">
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-800 font-headline">Thêm thành viên</h1>
+        <p class="mt-2 text-slate-600 text-sm">Tạo thêm thành viên mới để cùng sử dụng hệ thống trong household.</p>
+    </div>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data" class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-6">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+                <label asp-for="DisplayName" class="block text-sm font-medium text-slate-700 mb-2">Tên hiển thị</label>
+                <input asp-for="DisplayName" class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00ff95]" />
+                <span asp-validation-for="DisplayName" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div>
+                <label asp-for="Email" class="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                <input asp-for="Email" class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00ff95]" />
+                <span asp-validation-for="Email" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div>
+                <label asp-for="Role" class="block text-sm font-medium text-slate-700 mb-2">Vai trò</label>
+                <select asp-for="Role" asp-items="Model.RoleOptions"
+                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00ff95]"></select>
+                <span asp-validation-for="Role" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200/60 flex flex-col sm:flex-row items-center gap-6 mt-2">
+                <div class="relative">
+                    <div class="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-md bg-slate-200 flex items-center justify-center">
+                        <img id="avatarPreview" src="@(string.IsNullOrWhiteSpace(Model.AvatarPath) ? "" : Model.AvatarPath)" 
+                             alt="Avatar Preview" class="w-full h-full object-cover @(string.IsNullOrWhiteSpace(Model.AvatarPath) ? "hidden" : "")" />
+                        <span id="avatarPlaceholder" class="material-symbols-outlined text-slate-400 text-5xl @(string.IsNullOrWhiteSpace(Model.AvatarPath) ? "" : "hidden")">account_circle</span>
+                    </div>
+                </div>
+                
+                <div class="flex-1 text-center sm:text-left space-y-1.5">
+                    <label class="block text-sm font-bold text-slate-700">Ảnh đại diện (Avatar)</label>
+                    <p class="text-xs text-slate-500">Hỗ trợ JPG, PNG, GIF. Kích thước tối đa 2MB.</p>
+                    
+                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mt-2">
+                        <input asp-for="AvatarFile" type="file" accept="image/*" class="hidden" id="avatarFileInput" />
+                        <input asp-for="AvatarPath" type="hidden" id="avatarPathHidden" />
+                        
+                        <button type="button" onclick="document.getElementById('avatarFileInput').click()" 
+                                class="inline-flex items-center justify-center rounded-lg bg-white border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition shadow-sm cursor-pointer">
+                            <span class="material-symbols-outlined mr-2 text-[18px]">image</span>
+                            Chọn ảnh từ máy
+                        </button>
+                        
+                        <button type="button" id="btnRemoveAvatar" 
+                                class="inline-flex items-center justify-center rounded-lg bg-rose-50 border border-rose-200 px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-100 active:bg-rose-200 transition shadow-sm cursor-pointer @(string.IsNullOrWhiteSpace(Model.AvatarPath) ? "hidden" : "")">
+                            <span class="material-symbols-outlined mr-2 text-[18px]">delete</span>
+                            Xóa ảnh
+                        </button>
+                    </div>
+                    <span asp-validation-for="AvatarFile" class="text-rose-600 text-sm block"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 cursor-pointer">
+                <input asp-for="ReceiveEmailNotification" class="mt-1 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400" />
+                <span>
+                    <span class="block font-medium text-slate-800">Nhận thông báo email</span>
+                    <span class="block text-sm text-slate-500">Cho phép nhận thông báo chung qua email.</span>
+                </span>
+            </label>
+
+            <label class="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 cursor-pointer">
+                <input asp-for="ReceiveExpiryNotification" class="mt-1 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400" />
+                <span>
+                    <span class="block font-medium text-slate-800">Nhận cảnh báo hạn dùng</span>
+                    <span class="block text-sm text-slate-500">Thông báo khi thực phẩm sắp hết hạn hoặc đã hết hạn.</span>
+                </span>
+            </label>
+
+            <label class="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 cursor-pointer">
+                <input asp-for="ReceiveOutOfStockNotification" class="mt-1 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400" />
+                <span>
+                    <span class="block font-medium text-slate-800">Nhận cảnh báo hết hàng</span>
+                    <span class="block text-sm text-slate-500">Thông báo khi món trong kho về trạng thái hết hàng.</span>
+                </span>
+            </label>
+
+            <label class="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 cursor-pointer">
+                <input asp-for="IsActive" class="mt-1 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400" />
+                <span>
+                    <span class="block font-medium text-slate-800">Đang hoạt động</span>
+                    <span class="block text-sm text-slate-500">Thành viên hoạt động có thể được chọn để sử dụng hệ thống.</span>
+                </span>
+            </label>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button type="submit"
+                    class="inline-flex items-center justify-center rounded-lg bg-primary hover:bg-emerald-600 text-white px-6 py-3 font-bold transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] hover:-translate-y-0.5">
+                <span class="material-symbols-outlined mr-2 text-[18px]">save</span>
+                Lưu thành viên
+            </button>
+
+            <a asp-action="Index"
+               class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 font-bold text-slate-700 hover:bg-slate-50 transition-all">
+                Quay lại danh sách
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('avatarFileInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const previewUrl = URL.createObjectURL(file);
+                const img = document.getElementById('avatarPreview');
+                const placeholder = document.getElementById('avatarPlaceholder');
+                const btnRemove = document.getElementById('btnRemoveAvatar');
+                
+                img.src = previewUrl;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                btnRemove.classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('btnRemoveAvatar').addEventListener('click', function () {
+            const fileInput = document.getElementById('avatarFileInput');
+            const pathHidden = document.getElementById('avatarPathHidden');
+            const img = document.getElementById('avatarPreview');
+            const placeholder = document.getElementById('avatarPlaceholder');
+            
+            fileInput.value = '';
+            pathHidden.value = '';
+            
+            img.src = '';
+            img.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            this.classList.add('hidden');
+        });
+    </script>
+}

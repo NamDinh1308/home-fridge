@@ -1,0 +1,303 @@
+@model IEnumerable<HomeFridgev1.Models.ViewModels.RecipeSuggestionViewModel>
+
+@{
+    ViewData["Title"] = "Gợi ý món ăn thông minh";
+}
+
+<div class="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center gap-2 text-indigo-600 font-bold text-sm mb-1.5">
+                <span class="material-symbols-outlined text-lg">auto_awesome</span>
+                <span>Tính năng thông minh</span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-slate-800 font-headline">Gợi ý món ăn hôm nay</h1>
+            <p class="mt-1 text-slate-500 text-sm">Đề xuất các món ăn dựa trên nguyên liệu thực tế trong tủ lạnh của bạn. Ưu tiên thực phẩm sắp hết hạn.</p>
+        </div>
+
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+            <a asp-action="Index"
+               class="w-full sm:w-auto inline-flex items-center justify-center rounded-[1.25rem] border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-6 py-2.5 font-bold transition-all shadow-sm">
+                <span class="material-symbols-outlined mr-2 text-xl">restaurant_menu</span>
+                Sổ tay công thức
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="mb-6 rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800 text-sm font-medium shadow-sm flex items-center gap-2">
+            <span class="material-symbols-outlined text-emerald-500">check_circle</span>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="mb-6 rounded-[1.25rem] border border-rose-200 bg-rose-50 px-5 py-4 text-rose-800 text-sm font-medium shadow-sm flex items-center gap-2">
+            <span class="material-symbols-outlined text-rose-500">error</span>
+            <span>@TempData["ErrorMessage"]</span>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-12 text-center">
+            <div class="w-20 h-20 mx-auto bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-400">
+                <span class="material-symbols-outlined text-4xl">auto_awesome</span>
+            </div>
+            <h2 class="text-xl font-bold text-slate-700 font-headline">Chưa có gợi ý nào</h2>
+            <p class="mt-2 text-slate-500 text-sm max-w-md mx-auto">Vui lòng thêm công thức nấu ăn vào sổ tay trước, sau đó hệ thống sẽ tự động so khớp và gợi ý các món ăn khả thi cho bạn.</p>
+            <a asp-action="Create"
+               class="mt-6 inline-flex items-center justify-center rounded-[1.25rem] bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 font-bold transition-all shadow-[0_10px_20px_-10px_rgba(79,70,229,0.5)]">
+                Thêm công thức ngay
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- Filters & Search Bar -->
+        <div class="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Search -->
+            <div class="relative flex-1 max-w-md">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                <input type="text" id="recipe-search" placeholder="Tìm món ăn hoặc nguyên liệu..." 
+                       class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-700 text-sm transition-all placeholder:text-slate-400" />
+            </div>
+
+            <!-- Client Filter Buttons -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
+                <button type="button" onclick="filterRecipes('all')" id="btn-filter-all"
+                        class="filter-btn active-filter px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap bg-indigo-600 text-white shadow-sm">
+                    Tất cả (@Model.Count())
+                </button>
+                <button type="button" onclick="filterRecipes('cookable')" id="btn-filter-cookable"
+                        class="filter-btn px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap bg-slate-50 text-slate-600 hover:bg-slate-100">
+                    Nấu được ngay (@Model.Count(m => m.IsCookable))
+                </button>
+                <button type="button" onclick="filterRecipes('expiring')" id="btn-filter-expiring"
+                        class="filter-btn px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap bg-slate-50 text-slate-600 hover:bg-slate-100">
+                    Có đồ sắp hết hạn (@Model.Count(m => m.HasExpiringIngredients))
+                </button>
+                <button type="button" onclick="filterRecipes('shopping')" id="btn-filter-shopping"
+                        class="filter-btn px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap bg-slate-50 text-slate-600 hover:bg-slate-100">
+                    Cần mua thêm (@Model.Count(m => !m.IsCookable))
+                </button>
+            </div>
+        </div>
+
+        <!-- Recipe Suggestion List -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="recipe-list-container">
+            @foreach (var suggestion in Model)
+            {
+                var filterClass = "";
+                if (suggestion.IsCookable) filterClass += " recipe-cookable";
+                if (suggestion.HasExpiringIngredients) filterClass += " recipe-expiring";
+                if (!suggestion.IsCookable) filterClass += " recipe-shopping";
+
+                <div class="recipe-card bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md hover:-translate-y-1 @filterClass"
+                     data-name="@suggestion.RecipeName.ToLower()"
+                     data-ingredients="@string.Join(",", suggestion.IngredientsStatus.Select(i => i.FoodName.ToLower()))">
+                    
+                    <!-- Card Image with Badges -->
+                    <div class="h-44 bg-slate-100 relative overflow-hidden flex items-center justify-center">
+                        @if (!string.IsNullOrEmpty(suggestion.ImagePath))
+                        {
+                            <img src="@suggestion.ImagePath" alt="@suggestion.RecipeName" class="w-full h-full object-cover" />
+                        }
+                        else
+                        {
+                            <div class="flex flex-col items-center justify-center text-slate-400">
+                                <span class="material-symbols-outlined text-5xl mb-2">dinner_dining</span>
+                                <span class="text-xs uppercase font-bold tracking-wider text-slate-400">Không có hình ảnh</span>
+                            </div>
+                        }
+
+                        <!-- Expiring warning label -->
+                        @if (suggestion.HasExpiringIngredients)
+                        {
+                            <span class="absolute top-4 left-4 inline-flex items-center gap-1 bg-amber-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm z-10 animate-pulse">
+                                <span class="material-symbols-outlined text-sm">warning</span>
+                                Sắp hết hạn!
+                            </span>
+                        }
+
+                        <!-- Match % Badge -->
+                        <span class="absolute top-4 right-4 inline-flex items-center justify-center bg-slate-900/75 backdrop-blur-sm text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm">
+                            Độ khớp: @suggestion.MatchPercentage%
+                        </span>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="p-6 flex flex-col flex-grow">
+                        <!-- Header & Description -->
+                        <div class="mb-4">
+                            <h3 class="text-lg font-bold text-slate-800 font-headline line-clamp-1">@suggestion.RecipeName</h3>
+                            <p class="text-slate-500 text-xs line-clamp-2 mt-1">
+                                @(string.IsNullOrWhiteSpace(suggestion.Description) ? "Không có mô tả chi tiết." : suggestion.Description)
+                            </p>
+                        </div>
+
+                        <!-- Ingredients List Status -->
+                        <div class="mb-5 flex-grow">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">Thành phần nguyên liệu</h4>
+                            <div class="space-y-2">
+                                @foreach (var ing in suggestion.IngredientsStatus)
+                                {
+                                    <div class="flex items-center justify-between text-xs py-1 px-2 rounded-xl bg-slate-50/50">
+                                        <div class="flex items-center gap-2">
+                                            @if (ing.Status == "Match")
+                                            {
+                                                <span class="material-symbols-outlined text-emerald-500 text-[18px]">check_circle</span>
+                                            }
+                                            else if (ing.Status == "Partial")
+                                            {
+                                                <span class="material-symbols-outlined text-amber-500 text-[18px]">adjust</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="material-symbols-outlined text-slate-300 text-[18px]">cancel</span>
+                                            }
+                                            <span class="font-medium text-slate-700">@ing.FoodName</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="font-semibold text-slate-800">Cần: @ing.RequiredQuantity.ToString("0.##") @ing.Unit</span>
+                                            <span class="block text-[10px] text-slate-400">
+                                                (Có sẵn: @ing.AvailableQuantity.ToString("0.##") @ing.Unit)
+                                            </span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="border-t border-slate-100 pt-4 mt-auto">
+                            @if (suggestion.IsCookable)
+                            {
+                                <div class="mb-3 flex items-center justify-center gap-1.5 py-2 px-3 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-2xl">
+                                    <span class="material-symbols-outlined text-[18px] text-emerald-500">check</span>
+                                    <span>Tủ lạnh có đầy đủ nguyên liệu</span>
+                                </div>
+                                <form asp-action="Cook" asp-route-id="@suggestion.RecipeId" method="post" class="block w-full">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white py-3 font-bold text-sm transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.4)] hover:-translate-y-0.5">
+                                        <span class="material-symbols-outlined text-lg">local_dining</span>
+                                        Nấu ngay (Trừ tủ lạnh)
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <div class="mb-3 flex items-center justify-center gap-1.5 py-2 px-3 bg-rose-50 text-rose-700 text-xs font-semibold rounded-2xl">
+                                    <span class="material-symbols-outlined text-[18px] text-rose-500">shopping_bag</span>
+                                    <span>Thiếu @suggestion.IngredientsStatus.Count(i => i.Status != "Match") nguyên liệu</span>
+                                </div>
+                                <form asp-action="AddMissingToShoppingList" asp-route-id="@suggestion.RecipeId" method="post" class="block w-full">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white py-3 font-bold text-sm transition-all shadow-[0_10px_20px_-10px_rgba(79,70,229,0.4)] hover:-translate-y-0.5">
+                                        <span class="material-symbols-outlined text-lg">add_shopping_cart</span>
+                                        Mua nguyên liệu thiếu
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- No search results placeholder -->
+        <div id="no-results-placeholder" class="hidden bg-white rounded-[2rem] border border-slate-100 shadow-sm p-12 text-center">
+            <div class="w-20 h-20 mx-auto bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-400">
+                <span class="material-symbols-outlined text-4xl">search_off</span>
+            </div>
+            <h2 class="text-xl font-bold text-slate-700 font-headline">Không tìm thấy món ăn nào</h2>
+            <p class="mt-2 text-slate-500 text-sm">Vui lòng thay đổi từ khóa tìm kiếm hoặc bộ lọc.</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        let currentFilter = 'all';
+
+        function filterRecipes(filterType) {
+            currentFilter = filterType;
+            
+            // Toggle active filter button styling
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm', 'active-filter');
+                btn.classList.add('bg-slate-50', 'text-slate-600', 'hover:bg-slate-100');
+            });
+
+            const activeBtn = document.getElementById(`btn-filter-${filterType}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-50', 'text-slate-600', 'hover:bg-slate-100');
+                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm', 'active-filter');
+            }
+
+            applySearchAndFilter();
+        }
+
+        function applySearchAndFilter() {
+            const searchQuery = document.getElementById('recipe-search')?.value.toLowerCase().trim() || "";
+            const cards = document.querySelectorAll('.recipe-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                let matchesSearch = true;
+                let matchesFilter = true;
+
+                // 1. Search filter
+                if (searchQuery !== "") {
+                    const name = card.getAttribute('data-name') || "";
+                    const ingredients = card.getAttribute('data-ingredients') || "";
+                    if (!name.includes(searchQuery) && !ingredients.includes(searchQuery)) {
+                        matchesSearch = false;
+                    }
+                }
+
+                // 2. Tab filter
+                if (currentFilter === 'cookable' && !card.classList.contains('recipe-cookable')) {
+                    matchesFilter = false;
+                } else if (currentFilter === 'expiring' && !card.classList.contains('recipe-expiring')) {
+                    matchesFilter = false;
+                } else if (currentFilter === 'shopping' && !card.classList.contains('recipe-shopping')) {
+                    matchesFilter = false;
+                }
+
+                // Show/hide card
+                if (matchesSearch && matchesFilter) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            // Toggle no results placeholder
+            const noResults = document.getElementById('no-results-placeholder');
+            const container = document.getElementById('recipe-list-container');
+            if (visibleCount === 0) {
+                noResults?.classList.remove('hidden');
+                container?.classList.add('hidden');
+            } else {
+                noResults?.classList.add('hidden');
+                container?.classList.remove('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('recipe-search');
+            if (searchInput) {
+                searchInput.addEventListener('input', applySearchAndFilter);
+            }
+        });
+    </script>
+}

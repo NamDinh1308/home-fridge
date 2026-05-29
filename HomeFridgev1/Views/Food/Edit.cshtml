@@ -1,0 +1,252 @@
+@model HomeFridgev1.Models.ViewModels.FoodEditViewModel
+
+@{
+    ViewData["Title"] = "Sửa thực phẩm";
+}
+
+<div class="max-w-[941px] mx-auto py-8 px-4">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-slate-800">Sửa thực phẩm</h1>
+        <p class="mt-2 text-slate-600">Cập nhật thông tin và ảnh minh họa cho món trong kho gia đình.</p>
+    </div>
+
+    <form asp-action="Edit" method="post" class="bg-white shadow-sm rounded-3xl border border-slate-200 p-6 space-y-6">
+        <input asp-for="Id" type="hidden" />
+
+        <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm"></div>
+
+        <div>
+            <label asp-for="Name" class="block text-sm font-medium text-slate-700 mb-1">Tên thực phẩm</label>
+            <input asp-for="Name" class="w-full rounded-2xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+            <span asp-validation-for="Name" class="text-red-600 text-sm"></span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label asp-for="CategoryId" class="block text-sm font-medium text-slate-700 mb-1">Danh mục</label>
+                <select asp-for="CategoryId" asp-items="Model.Categories" class="w-full rounded-2xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    <option value="">-- Chọn danh mục --</option>
+                </select>
+                <span asp-validation-for="CategoryId" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div>
+                <label asp-for="StorageLocationId" class="block text-sm font-medium text-slate-700 mb-1">Vị trí lưu trữ</label>
+                <select asp-for="StorageLocationId" asp-items="Model.StorageLocations" class="w-full rounded-2xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    <option value="">-- Chọn vị trí lưu trữ --</option>
+                </select>
+                <span asp-validation-for="StorageLocationId" class="text-red-600 text-sm"></span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label asp-for="Unit" class="block text-sm font-medium text-slate-700 mb-1">Đơn vị tính</label>
+                <input asp-for="Unit" class="w-full rounded-2xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                <span asp-validation-for="Unit" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div>
+                <label asp-for="MinQuantityThreshold" class="block text-sm font-medium text-slate-700 mb-1">Ngưỡng tối thiểu</label>
+                <input asp-for="MinQuantityThreshold" class="w-full rounded-2xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                <span asp-validation-for="MinQuantityThreshold" class="text-red-600 text-sm"></span>
+            </div>
+        </div>
+
+        <div>
+            <label asp-for="ExpiryDate" class="block text-sm font-medium text-slate-700 mb-1">Hạn sử dụng</label>
+            <input asp-for="ExpiryDate" class="w-full rounded-2xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+            <span asp-validation-for="ExpiryDate" class="text-red-600 text-sm"></span>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Chọn ảnh thực phẩm từ thư viện</label>
+            <input asp-for="SelectedImagePath" type="hidden" id="SelectedImagePath" />
+            <span asp-validation-for="SelectedImagePath" class="text-red-600 text-sm"></span>
+
+            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Tìm ảnh</label>
+                        <input type="text"
+                               id="imageSearch"
+                               placeholder="Tìm theo tên thực phẩm..."
+                               class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Lọc nhóm ảnh</label>
+                        <select id="imageCategoryFilter"
+                                class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="">Tất cả nhóm</option>
+                            <option value="fruit">Trái cây</option>
+                            <option value="vegetable">Rau củ</option>
+                            <option value="meat">Thịt / Hải sản</option>
+                            <option value="drink">Đồ uống / Sữa</option>
+                            <option value="dried">Đồ khô</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Ảnh hiện tại / ảnh đã chọn</div>
+                    <div id="selectedImagePreview"
+                         class="min-h-[110px] rounded-2xl border border-dashed border-slate-300 bg-white p-4 flex items-center justify-center text-sm text-slate-400">
+                        Chưa chọn ảnh thực phẩm
+                    </div>
+                </div>
+
+                <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Thư viện ảnh</div>
+                <div id="imageLibraryGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[420px] overflow-y-auto pr-1">
+                    @foreach (var image in Model.ImageLibrary)
+                    {
+                        var categoryText = image.CategoryKey switch
+                        {
+                            "fruit" => "Trái cây",
+                            "vegetable" => "Rau củ",
+                            "meat" => "Thịt / Hải sản",
+                            "drink" => "Đồ uống / Sữa",
+                            "dried" => "Đồ khô",
+                            _ => image.CategoryKey
+                        };
+
+                        <button type="button"
+                                class="image-card group rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                                data-image-path="@image.ImagePath"
+                                data-name="@image.Name"
+                                data-category="@image.CategoryKey"
+                                data-tags="@string.Join(" ", image.Tags)">
+                            <div class="aspect-square overflow-hidden rounded-xl bg-slate-100">
+                                <img src="@image.ImagePath" alt="@image.Name" class="h-full w-full object-cover" />
+                            </div>
+                            <div class="mt-3">
+                                <div class="font-semibold text-slate-800 text-sm">@image.Name</div>
+                                <div class="mt-1 text-xs text-slate-500">@categoryText</div>
+                            </div>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <label asp-for="Notes" class="block text-sm font-medium text-slate-700 mb-1">Ghi chú</label>
+            <textarea asp-for="Notes" rows="4" class="w-full rounded-2xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"></textarea>
+            <span asp-validation-for="Notes" class="text-red-600 text-sm"></span>
+        </div>
+
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Lưu ý: Màn hình này chỉ cập nhật thông tin mô tả và ảnh minh họa. Số lượng sẽ được xử lý ở thao tác riêng.
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-primary hover:bg-emerald-600 text-white px-5 py-3 font-medium transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] hover:-translate-y-0.5">
+                Lưu thay đổi
+            </button>
+
+            <a asp-action="Index" class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 font-medium text-slate-700 hover:bg-slate-50 transition">
+                Quay lại danh sách
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const searchInput = document.getElementById('imageSearch');
+            const categoryFilter = document.getElementById('imageCategoryFilter');
+            const imageCards = Array.from(document.querySelectorAll('.image-card'));
+            const hiddenInput = document.getElementById('SelectedImagePath');
+            const preview = document.getElementById('selectedImagePreview');
+
+            function normalize(value) {
+                return (value || '').toString().trim().toLowerCase();
+            }
+
+            function renderPreview(path, name) {
+                if (!path) {
+                    preview.innerHTML = '<span class="text-sm text-slate-400">Chưa chọn ảnh thực phẩm</span>';
+                    return;
+                }
+
+                preview.innerHTML = `
+                    <div class="flex items-center gap-4 w-full">
+                        <img src="${path}" alt="${name}" class="h-20 w-20 rounded-2xl object-cover border border-slate-200" />
+                        <div>
+                            <div class="text-sm text-slate-500">Ảnh đã chọn</div>
+                            <div class="text-lg font-semibold text-slate-800">${name}</div>
+                            <div class="text-xs text-slate-500 break-all">${path}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function applySelectedState() {
+                const selectedPath = hiddenInput.value;
+
+                imageCards.forEach(card => {
+                    const cardPath = card.dataset.imagePath;
+                    const isSelected = selectedPath && cardPath === selectedPath;
+
+                    if (isSelected) {
+                        card.classList.add('ring-2', 'ring-emerald-500', 'border-emerald-300', 'bg-emerald-50');
+                    } else {
+                        card.classList.remove('ring-2', 'ring-emerald-500', 'border-emerald-300', 'bg-emerald-50');
+                    }
+                });
+            }
+
+            function filterCards() {
+                const searchValue = normalize(searchInput.value);
+                const categoryValue = normalize(categoryFilter.value);
+
+                imageCards.forEach(card => {
+                    const name = normalize(card.dataset.name);
+                    const category = normalize(card.dataset.category);
+                    const tags = normalize(card.dataset.tags);
+
+                    const matchesSearch =
+                        !searchValue ||
+                        name.includes(searchValue) ||
+                        tags.includes(searchValue);
+
+                    const matchesCategory =
+                        !categoryValue || category === categoryValue;
+
+                    card.style.display = matchesSearch && matchesCategory ? '' : 'none';
+                });
+            }
+
+            imageCards.forEach(card => {
+                card.addEventListener('click', function () {
+                    const imagePath = this.dataset.imagePath;
+                    const imageName = this.dataset.name;
+
+                    hiddenInput.value = imagePath;
+                    renderPreview(imagePath, imageName);
+                    applySelectedState();
+                });
+            });
+
+            searchInput.addEventListener('input', filterCards);
+            categoryFilter.addEventListener('change', filterCards);
+
+            if (hiddenInput.value) {
+                const matched = imageCards.find(card => card.dataset.imagePath === hiddenInput.value);
+                if (matched) {
+                    renderPreview(matched.dataset.imagePath, matched.dataset.name);
+                } else {
+                    renderPreview('', '');
+                }
+            } else {
+                renderPreview('', '');
+            }
+
+            applySelectedState();
+            filterCards();
+        })();
+    </script>
+}

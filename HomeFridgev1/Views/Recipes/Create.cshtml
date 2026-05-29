@@ -1,0 +1,186 @@
+@model HomeFridgev1.Models.ViewModels.RecipeFormViewModel
+
+@{
+    ViewData["Title"] = "Thêm công thức mới";
+}
+
+<div class="max-w-3xl mx-auto px-8 py-8">
+    <div class="mb-8">
+        <a asp-action="Index" class="inline-flex items-center text-slate-500 hover:text-slate-700 text-sm font-semibold mb-3">
+            <span class="material-symbols-outlined text-base mr-1">arrow_back</span>
+            Quay lại danh sách
+        </a>
+        <h1 class="text-2xl font-bold text-slate-800 font-headline">Thêm công thức mới</h1>
+        <p class="mt-2 text-slate-600 text-sm">Tạo công thức món ăn mới để hệ thống theo dõi và gợi ý nấu ăn thông minh.</p>
+    </div>
+
+    <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8">
+        <form asp-action="Create" method="post" id="recipeForm">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="mb-6 rounded-[1.25rem] border border-red-200 bg-red-50 px-5 py-4 text-red-700 text-sm font-medium shadow-sm"></div>
+
+            <!-- Tên món ăn -->
+            <div class="mb-6">
+                <label asp-for="Name" class="block text-sm font-bold text-slate-700 mb-2"></label>
+                <input asp-for="Name" class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400" placeholder="Ví dụ: Trứng đúc thịt, Canh cà chua..." />
+                <span asp-validation-for="Name" class="text-xs text-red-500 mt-1 block"></span>
+            </div>
+
+            <!-- Mô tả ngắn -->
+            <div class="mb-6">
+                <label asp-for="Description" class="block text-sm font-bold text-slate-700 mb-2"></label>
+                <textarea asp-for="Description" rows="2" class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400" placeholder="Tóm tắt ngắn gọn hương vị hoặc lưu ý đặc biệt cho món ăn này..."></textarea>
+                <span asp-validation-for="Description" class="text-xs text-red-500 mt-1 block"></span>
+            </div>
+
+            <!-- Đường dẫn hình ảnh -->
+            <div class="mb-6">
+                <label asp-for="ImagePath" class="block text-sm font-bold text-slate-700 mb-2"></label>
+                <input asp-for="ImagePath" class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400" placeholder="https://example.com/image.jpg (Để trống nếu dùng hình mặc định)" />
+                <span asp-validation-for="ImagePath" class="text-xs text-red-500 mt-1 block"></span>
+            </div>
+
+            <!-- Hướng dẫn nấu ăn -->
+            <div class="mb-8">
+                <label asp-for="Instructions" class="block text-sm font-bold text-slate-700 mb-2"></label>
+                <textarea asp-for="Instructions" rows="5" class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400" placeholder="Bước 1: Sơ chế nguyên liệu...&#10;Bước 2: Xào thịt băm...&#10;Bước 3: Nêm nếm gia vị và hoàn thành..."></textarea>
+                <span asp-validation-for="Instructions" class="text-xs text-red-500 mt-1 block"></span>
+            </div>
+
+            <!-- Mục nguyên liệu -->
+            <div class="border-t border-slate-100 pt-8 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-bold text-slate-800 font-headline flex items-center gap-2">
+                        <span class="material-symbols-outlined text-indigo-500">shopping_cart</span>
+                        Danh sách nguyên liệu yêu cầu
+                    </h3>
+                    <button type="button" id="btnAddIngredient"
+                            class="inline-flex items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 text-xs font-bold transition-all">
+                        <span class="material-symbols-outlined text-[16px] mr-1">add</span>
+                        Thêm nguyên liệu
+                    </button>
+                </div>
+
+                <div id="ingredientsContainer" class="space-y-4">
+                    @for (int i = 0; i < Model.Ingredients.Count; i++)
+                    {
+                        <div class="ingredient-row flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group" data-index="@i">
+                            <div class="flex-grow grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Tên nguyên liệu</label>
+                                    <input name="Ingredients[@i].FoodName" value="@Model.Ingredients[i].FoodName"
+                                           class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 text-sm bg-white" placeholder="Ví dụ: Thịt ba rọi, Trứng" required />
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Số lượng</label>
+                                    <input type="number" step="0.01" name="Ingredients[@i].RequiredQuantity" value="@Model.Ingredients[i].RequiredQuantity"
+                                           class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 text-sm bg-white" placeholder="300, 2, 1.5..." required />
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Đơn vị</label>
+                                    <input name="Ingredients[@i].Unit" value="@Model.Ingredients[i].Unit"
+                                           class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 text-sm bg-white" placeholder="g, kg, quả, hộp..." required />
+                                </div>
+                            </div>
+                            <div class="pt-4">
+                                <button type="button" class="btnRemoveIngredient text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-all" title="Xóa nguyên liệu">
+                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Các nút Lưu / Hủy -->
+            <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
+                <a asp-action="Index" class="inline-flex items-center justify-center rounded-[1.25rem] border border-slate-200 bg-white hover:bg-slate-50 px-6 py-2.5 font-bold text-slate-700 transition-all">
+                    Hủy bỏ
+                </a>
+                <button type="submit"
+                        class="inline-flex items-center justify-center rounded-[1.25rem] bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-2.5 font-bold transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)]">
+                    Lưu công thức
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const container = document.getElementById("ingredientsContainer");
+            const btnAdd = document.getElementById("btnAddIngredient");
+
+            // Xử lý Thêm nguyên liệu
+            btnAdd.addEventListener("click", function () {
+                const rows = container.getElementsByClassName("ingredient-row");
+                const nextIndex = rows.length;
+
+                const rowHtml = `
+                    <div class="ingredient-row flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group" data-index="${nextIndex}">
+                        <div class="flex-grow grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Tên nguyên liệu</label>
+                                <input name="Ingredients[${nextIndex}].FoodName"
+                                       class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 text-sm bg-white" placeholder="Ví dụ: Thịt ba rọi, Trứng" required />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Số lượng</label>
+                                <input type="number" step="0.01" name="Ingredients[${nextIndex}].RequiredQuantity"
+                                       class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 text-sm bg-white" placeholder="300, 2, 1.5..." required />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Đơn vị</label>
+                                <input name="Ingredients[${nextIndex}].Unit"
+                                       class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 text-sm bg-white" placeholder="g, kg, quả, hộp..." required />
+                            </div>
+                        </div>
+                        <div class="pt-4">
+                            <button type="button" class="btnRemoveIngredient text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-all" title="Xóa nguyên liệu">
+                                <span class="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                container.insertAdjacentHTML("beforeend", rowHtml);
+                attachRemoveEvents();
+            });
+
+            // Xử lý Xóa nguyên liệu và cập nhật lại chỉ mục (index) của tất cả hàng
+            function attachRemoveEvents() {
+                const buttons = container.getElementsByClassName("btnRemoveIngredient");
+                Array.from(buttons).forEach(btn => {
+                    btn.onclick = function () {
+                        const row = this.closest(".ingredient-row");
+                        row.remove();
+                        reIndexRows();
+                    };
+                });
+            }
+
+            function reIndexRows() {
+                const rows = container.getElementsByClassName("ingredient-row");
+                Array.from(rows).forEach((row, newIndex) => {
+                    row.setAttribute("data-index", newIndex);
+                    
+                    // Cập nhật lại thuộc tính name của input
+                    const inputs = row.querySelectorAll("input");
+                    inputs.forEach(input => {
+                        const nameAttr = input.getAttribute("name");
+                        if (nameAttr) {
+                            // Format cũ: Ingredients[x].FieldName -> Cập nhật sang Ingredients[newIndex].FieldName
+                            const fieldName = nameAttr.substring(nameAttr.indexOf(".") + 1);
+                            input.setAttribute("name", `Ingredients[${newIndex}].${fieldName}`);
+                        }
+                    });
+                });
+            }
+
+            attachRemoveEvents();
+        });
+    </script>
+}

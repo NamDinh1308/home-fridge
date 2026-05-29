@@ -1,0 +1,95 @@
+Thiết kế lại footer cho website/app “Home’s Fridge” theo phong cách modern, clean, thân thiện với người dùng gia đình.
+
+Mục tiêu:
+
+* Footer nhìn giống sản phẩm thật thay vì template mặc định
+* Tăng tính chuyên nghiệp nhưng vẫn tối giản
+* Cải thiện hierarchy, spacing và readability
+* Tối ưu trải nghiệm desktop trước
+
+Yêu cầu chỉnh sửa:
+
+1. Bố cục
+
+* Sử dụng layout 3 cột cân đối hơn
+* Giảm khoảng trắng dư thừa giữa các cột
+* Footer không quá cao
+* Căn chỉnh đồng đều theo chiều dọc
+* Phần bottom bar (copyright + social) phải gắn kết hơn với phần trên
+
+2. Brand section
+
+* Tăng kích thước logo/title nhẹ
+* Mô tả ngắn gọn, tự nhiên hơn
+
+Thay đoạn mô tả hiện tại bằng:
+“Quản lý thực phẩm trong gia đình dễ dàng hơn. Theo dõi hạn sử dụng và giảm lãng phí mỗi ngày.”
+
+3. Navigation section
+   Đổi title:
+   “CHỨC NĂNG CHÍNH”
+   thành:
+   “Tính năng”
+
+Đổi các item:
+
+* Xem tổng quan → Tổng quan
+* Danh sách thực phẩm → Kho thực phẩm
+* Quản lý thành viên → Thành viên gia đình
+
+Giữ:
+
+* Thêm thực phẩm
+
+4. Support section
+   Tách rõ:
+
+* Hỗ trợ
+* Liên hệ
+
+Ví dụ:
+Hỗ trợ:
+
+* Hướng dẫn sử dụng
+* Chính sách bảo mật
+* Điều khoản sử dụng
+
+Liên hệ:
+
+* [support@homefridge.vn](mailto:support@homefridge.vn)
+
+5. Footer bottom
+
+* Thêm đường phân cách nhẹ
+* Căn copyright và social icons cùng một hàng
+* Social icons không bị cô lập ở góc phải
+* Ưu tiên Facebook + Instagram thay vì Twitter/X
+* Hover effect nhẹ và hiện đại
+
+6. UI/UX style
+
+* Typography rõ hierarchy hơn
+* Heading đậm vừa phải
+* Text phụ màu xám mềm
+* Hover links có transition mượt
+* Khoảng cách giữa các item đều hơn
+* Responsive tốt trên tablet/mobile
+
+7. Visual style mong muốn
+   Phong cách:
+
+* modern SaaS
+* clean
+* trustworthy
+* family-friendly
+* minimal nhưng không trống trải
+
+Tham khảo cảm giác UI:
+Notion + Dropbox + Spotify footer spacing
+
+8. Bonus nếu phù hợp
+   Có thể thêm:
+
+* mini CTA nhẹ
+* hoặc dòng slogan nhỏ
+  nhưng không làm footer quá dài.

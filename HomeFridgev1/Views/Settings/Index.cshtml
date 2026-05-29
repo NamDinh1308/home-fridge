@@ -1,0 +1,204 @@
+@model HomeFridgev1.Models.ViewModels.HouseholdSettingsViewModel
+
+@{
+    ViewData["Title"] = "Cài đặt";
+}
+
+<div class="max-w-5xl mx-auto px-8 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 font-headline">Cài đặt gia đình</h1>
+            <p class="mt-2 text-slate-600 text-sm">
+                Quản lý thông tin household, ngưỡng cảnh báo và các quy tắc vận hành chung của hệ thống.
+            </p>
+        </div>
+
+        <a asp-controller="Home"
+           asp-action="Dashboard"
+           class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-6 py-2.5 font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
+            <span class="material-symbols-outlined mr-2 text-xl">arrow_back</span>
+            Về tổng quan
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="mb-6 rounded-lg border border-green-200 bg-green-50 px-5 py-4 text-green-700 text-sm font-medium shadow-sm">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-red-700 text-sm font-medium shadow-sm">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form asp-action="Index" method="post" class="space-y-6">
+        @Html.AntiForgeryToken()
+        <input asp-for="HouseholdId" type="hidden" />
+
+        <div asp-validation-summary="ModelOnly" class="rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-red-700 text-sm"></div>
+
+        <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 transition-all hover:-translate-y-1 hover:shadow-md hover:border-emerald-100">
+            <div class="mb-5">
+                <h2 class="text-lg font-bold text-slate-800 font-headline">Thông tin gia đình</h2>
+                <p class="mt-1 text-sm text-slate-500">Những thông tin cơ bản để định danh household trong hệ thống.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label asp-for="HouseholdName" class="block text-sm font-medium text-slate-700 mb-2"></label>
+                    <input asp-for="HouseholdName"
+                           class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                    <span asp-validation-for="HouseholdName" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Description" class="block text-sm font-medium text-slate-700 mb-2"></label>
+                    <textarea asp-for="Description"
+                              rows="4"
+                              class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                              placeholder="Ví dụ: Gia đình 4 người, ưu tiên theo dõi thực phẩm tươi..."></textarea>
+                    <span asp-validation-for="Description" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 transition-all hover:-translate-y-1 hover:shadow-md hover:border-emerald-100">
+            <div class="mb-5">
+                <h2 class="text-lg font-bold text-slate-800 font-headline">Quy tắc cảnh báo hạn dùng</h2>
+                <p class="mt-1 text-sm text-slate-500">Thiết lập số ngày trước hạn để hệ thống tự chuyển trạng thái cảnh báo.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label asp-for="WarningDaysBeforeExpiry" class="block text-sm font-medium text-slate-700 mb-2"></label>
+                    <input asp-for="WarningDaysBeforeExpiry"
+                           type="number"
+                           min="1"
+                           max="30"
+                           class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                    <p class="mt-2 text-xs text-slate-500">Ví dụ: còn 3 ngày thì hiển thị trạng thái Warning.</p>
+                    <span asp-validation-for="WarningDaysBeforeExpiry" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div>
+                    <label asp-for="UrgentDaysBeforeExpiry" class="block text-sm font-medium text-slate-700 mb-2"></label>
+                    <input asp-for="UrgentDaysBeforeExpiry"
+                           type="number"
+                           min="0"
+                           max="30"
+                           class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                    <p class="mt-2 text-xs text-slate-500">Ví dụ: còn 1 ngày thì hiển thị trạng thái Urgent.</p>
+                    <span asp-validation-for="UrgentDaysBeforeExpiry" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 transition-all hover:-translate-y-1 hover:shadow-md hover:border-emerald-100">
+            <div class="mb-5">
+                <h2 class="text-lg font-bold text-slate-800 font-headline">Quy tắc món hết hàng</h2>
+                <p class="mt-1 text-sm text-slate-500">Điều khiển cơ chế ẩn món khỏi danh sách khi ở trạng thái OutOfStock trong nhiều ngày.</p>
+            </div>
+
+            <div class="space-y-5">
+                <label class="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 cursor-pointer">
+                    <input asp-for="EnableAutoHideOutOfStock"
+                           id="EnableAutoHideOutOfStock"
+                           class="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400" />
+                    <div>
+                        <div class="font-semibold text-slate-800">Bật tự ẩn món hết hàng</div>
+                        <div class="mt-1 text-sm text-slate-500">Sau một khoảng thời gian, món ở trạng thái OutOfStock sẽ tự biến khỏi danh sách hoạt động.</div>
+                    </div>
+                </label>
+
+                <div id="autoHideDaysBlock" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label asp-for="OutOfStockAutoHideDays" class="block text-sm font-medium text-slate-700 mb-2"></label>
+                        <input asp-for="OutOfStockAutoHideDays"
+                               type="number"
+                               min="0"
+                               max="30"
+                               class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                        <p class="mt-2 text-xs text-slate-500">Ví dụ: sau 2 ngày ở trạng thái OutOfStock thì tự ẩn khỏi danh sách.</p>
+                        <span asp-validation-for="OutOfStockAutoHideDays" class="text-red-600 text-sm"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 transition-all hover:-translate-y-1 hover:shadow-md hover:border-emerald-100">
+            <div class="mb-5">
+                <h2 class="text-lg font-bold text-slate-800 font-headline">Thông báo</h2>
+                <p class="mt-1 text-sm text-slate-500">Các quy tắc thông báo chung cho toàn household.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <label class="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 cursor-pointer">
+                    <input asp-for="EnableEmailNotifications"
+                           class="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400" />
+                    <div>
+                        <div class="font-semibold text-slate-800">Thông báo email</div>
+                        <div class="mt-1 text-sm text-slate-500">Bật/tắt email nhắc việc ở cấp household.</div>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 cursor-pointer">
+                    <input asp-for="EnableExpiryNotifications"
+                           class="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400" />
+                    <div>
+                        <div class="font-semibold text-slate-800">Cảnh báo hết hạn</div>
+                        <div class="mt-1 text-sm text-slate-500">Nhắc khi món sắp đến hạn hoặc đã hết hạn.</div>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 cursor-pointer">
+                    <input asp-for="EnableOutOfStockNotifications"
+                           class="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400" />
+                    <div>
+                        <div class="font-semibold text-slate-800">Cảnh báo hết hàng</div>
+                        <div class="mt-1 text-sm text-slate-500">Nhắc khi món về trạng thái OutOfStock.</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button type="submit"
+                    class="inline-flex items-center justify-center rounded-lg bg-primary hover:bg-emerald-600 text-white px-6 py-3 font-bold transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] hover:-translate-y-0.5">
+                <span class="material-symbols-outlined mr-2 text-[18px]">save</span>
+                Lưu cài đặt
+            </button>
+
+            <a asp-controller="Home"
+               asp-action="Dashboard"
+               class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-6 py-3 font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
+                Hủy
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const toggle = document.getElementById('EnableAutoHideOutOfStock');
+            const block = document.getElementById('autoHideDaysBlock');
+
+            function refreshAutoHideState() {
+                if (!toggle || !block) return;
+                block.style.opacity = toggle.checked ? '1' : '0.45';
+            }
+
+            if (toggle) {
+                toggle.addEventListener('change', refreshAutoHideState);
+            }
+
+            refreshAutoHideState();
+        })();
+    </script>
+}

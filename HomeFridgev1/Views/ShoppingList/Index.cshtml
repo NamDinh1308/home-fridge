@@ -1,0 +1,447 @@
+@model HomeFridgev1.Models.ViewModels.ShoppingListViewModel
+
+@{
+    ViewData["Title"] = "Đi chợ & Mua sắm";
+}
+
+<div class="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800 font-headline tracking-tight">Danh sách đi chợ</h1>
+            <p class="text-slate-500 text-sm mt-1">Lên kế hoạch mua sắm và tự động nhập kho thực phẩm gia đình.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="bg-primary/10 text-primary px-4 py-2 rounded-2xl font-bold text-sm flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">shopping_basket</span>
+                <span>@Model.ActiveItems.Count mặt hàng cần mua</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="mb-6 rounded-[1.25rem] border border-green-200 bg-green-50 px-5 py-4 text-green-700 text-sm font-medium shadow-sm flex items-center gap-3">
+            <span class="material-symbols-outlined text-green-600">check_circle</span>
+            <div>@Html.Raw(TempData["SuccessMessage"])</div>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="mb-6 rounded-[1.25rem] border border-red-200 bg-red-50 px-5 py-4 text-red-700 text-sm font-medium shadow-sm flex items-center gap-3">
+            <span class="material-symbols-outlined text-red-600">error</span>
+            <div>@Html.Raw(TempData["ErrorMessage"])</div>
+        </div>
+    }
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Shopping List & History (8 cols) -->
+        <div class="lg:col-span-8 space-y-8">
+            
+            <!-- Active Items Card -->
+            <div class="bg-surface-container-lowest rounded-[2rem] border border-slate-100 shadow-sm p-6">
+                <h2 class="text-lg font-bold font-headline text-slate-800 mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">list_alt</span>
+                    Cần mua
+                </h2>
+                <div class="mb-5 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-2.5">
+                    <span class="material-symbols-outlined text-blue-500 text-[18px] mt-0.5 shrink-0">info</span>
+                    <p class="text-[11px] text-blue-600 leading-relaxed">
+                        <strong>Tích ô vuông (☐)</strong> = chỉ đánh dấu "đã mua", <em>không</em> cập nhật số lượng vào kho.
+                        Nhấn nút <strong class="text-emerald-600">Nhập kho</strong> để vừa đánh dấu đã mua, vừa tự động cộng số lượng vào tủ lạnh.
+                    </p>
+                </div>
+
+                @if (!Model.ActiveItems.Any())
+                {
+                    <div class="text-center py-10">
+                        <div class="w-16 h-16 mx-auto bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-400">
+                            <span class="material-symbols-outlined text-3xl">shopping_cart</span>
+                        </div>
+                        <p class="text-slate-500 font-semibold">Chưa có mặt hàng nào cần mua.</p>
+                        <p class="text-xs text-slate-400 mt-1">Hãy thêm thủ công ở cột bên phải hoặc chọn từ gợi ý.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="divide-y divide-slate-100">
+                        @foreach (var item in Model.ActiveItems)
+                        {
+                            <div class="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group">
+                                <div class="flex items-center gap-4 min-w-0">
+                                    <!-- Toggle Purchase Form -->
+                                    <form asp-controller="ShoppingList" asp-action="TogglePurchase" method="post" class="shrink-0 flex items-center">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="checkbox" onchange="this.form.submit()" 
+                                               title="Tích để đánh dấu đã mua (không nhập kho). Dùng nút 'Nhập kho' để cập nhật số lượng vào tủ lạnh."
+                                               class="h-5 w-5 rounded-lg border-slate-300 text-emerald-500 focus:ring-emerald-400 cursor-pointer" />
+                                    </form>
+
+                                    <!-- Details -->
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-slate-800 flex items-center gap-2 flex-wrap">
+                                            <span>@item.Name</span>
+                                            @if (item.Category != null)
+                                            {
+                                                <span class="inline-block px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-600">
+                                                    @item.Category.Name
+                                                </span>
+                                            }
+                                        </div>
+                                        <div class="text-xs text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
+                                            <span>Số lượng: <strong class="text-slate-600">@(item.Quantity.ToString("0.##")) @item.Unit</strong></span>
+                                            <span>•</span>
+                                            <span>Thêm bởi: @(item.AddedByMember?.DisplayName ?? "N/A")</span>
+                                            <span>•</span>
+                                            <span>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex items-center gap-2 shrink-0 ml-9 sm:ml-0">
+                                    <!-- Nhập kho nhanh Button -->
+                                    <button type="button" 
+                                            onclick="openRestockModal(@item.Id, '@item.Name', @item.Quantity, '@item.Unit', '@(item.CategoryId?.ToString() ?? "")')"
+                                            class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-primary hover:bg-emerald-600 rounded-xl transition-all shadow-sm">
+                                        <span class="material-symbols-outlined text-[16px]">kitchen</span>
+                                        <span>Nhập kho</span>
+                                    </button>
+
+                                    <!-- Delete Button -->
+                                    <form asp-controller="ShoppingList" asp-action="Delete" method="post" class="inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" onclick="return confirm('Bạn có chắc muốn xóa mặt hàng này?')"
+                                                class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors">
+                                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Purchased History Card -->
+            <div class="bg-surface-container-lowest rounded-[2rem] border border-slate-100 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-bold font-headline text-slate-800 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-slate-500">assignment_turned_in</span>
+                        Đã mua (Lịch sử)
+                    </h2>
+                    <button type="button" onclick="toggleHistoryCollapse()" class="text-slate-500 hover:text-slate-800 text-xs font-bold flex items-center gap-1">
+                        <span id="history-toggle-text">Hiện lịch sử</span>
+                        <span id="history-toggle-icon" class="material-symbols-outlined text-[16px] transition-transform">expand_more</span>
+                    </button>
+                </div>
+
+                <div id="history-section" class="hidden">
+                    @if (!Model.PurchasedItems.Any())
+                    {
+                        <p class="text-center text-slate-400 text-sm py-4">Chưa có lịch sử mua sắm gần đây.</p>
+                    }
+                    else
+                    {
+                        <div class="divide-y divide-slate-100 max-h-[400px] overflow-y-auto pr-2">
+                            @foreach (var item in Model.PurchasedItems)
+                            {
+                                <div class="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div class="flex items-center gap-4 min-w-0">
+                                        <!-- Uncheck Form to restore to list -->
+                                        <form asp-controller="ShoppingList" asp-action="TogglePurchase" method="post" class="shrink-0 flex items-center">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="checkbox" checked onchange="this.form.submit()" 
+                                                   title="Bỏ tích để đưa mặt hàng này trở lại danh sách cần mua."
+                                                   class="h-5 w-5 rounded-lg border-slate-300 text-slate-400 focus:ring-slate-300 cursor-pointer" />
+                                        </form>
+
+                                        <div class="min-w-0 text-slate-500">
+                                            <div class="font-medium line-through flex items-center gap-2 flex-wrap">
+                                                <span>@item.Name</span>
+                                                <span class="text-xs text-slate-400 font-normal">(@(item.Quantity.ToString("0.##")) @item.Unit)</span>
+                                            </div>
+                                            <div class="text-[11px] text-slate-400 mt-0.5">
+                                                Mua bởi: @(item.PurchasedByMember?.DisplayName ?? "N/A") • 
+                                                @(item.PurchasedAt?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Delete Button -->
+                                    <form asp-controller="ShoppingList" asp-action="Delete" method="post" class="inline ml-9 sm:ml-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" onclick="return confirm('Xóa khỏi lịch sử mua sắm?')"
+                                                class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Suggestions & Form (4 cols) -->
+        <div class="lg:col-span-4 space-y-8">
+            
+            <!-- Quick Add Form Card -->
+            <div class="bg-surface-container-lowest rounded-[2rem] border border-slate-100 shadow-sm p-6">
+                <h3 class="text-base font-bold font-headline text-slate-800 mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">add_circle</span>
+                    Thêm mặt hàng đi chợ
+                </h3>
+                
+                <form asp-controller="ShoppingList" asp-action="Create" method="post" class="space-y-4">
+                    @Html.AntiForgeryToken()
+                    
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Tên món cần mua</label>
+                        <input type="text" name="NewItem.Name" required placeholder="Ví dụ: Sữa tươi, Trứng, Thịt bò..." 
+                               class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all" />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Số lượng</label>
+                            <input type="number" name="NewItem.Quantity" step="0.01" min="0.01" value="1" required
+                                   class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Đơn vị</label>
+                            <input type="text" name="NewItem.Unit" value="Cái" required placeholder="Hộp, kg, cái..."
+                                   class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Danh mục</label>
+                        <select name="NewItem.CategoryId" 
+                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all">
+                            <option value="">-- Không phân loại --</option>
+                            @foreach (var cat in Model.Categories)
+                            {
+                                <option value="@cat.Value">@cat.Text</option>
+                            }
+                        </select>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full inline-flex items-center justify-center rounded-2xl bg-primary hover:bg-emerald-600 text-white font-bold text-sm py-3.5 transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] hover:-translate-y-0.5">
+                        <span class="material-symbols-outlined mr-2 text-[18px]">add</span>
+                        Thêm vào danh sách
+                    </button>
+                </form>
+            </div>
+
+            <!-- Smart Auto-Suggestions Card -->
+            <div class="bg-surface-container-lowest rounded-[2rem] border border-slate-100 shadow-sm p-6">
+                <h3 class="text-base font-bold font-headline text-slate-800 mb-2 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-amber-500">insights</span>
+                    Gợi ý mua sắm tự động
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">Nhận diện các mặt hàng hết kho hoặc dưới ngưỡng tối thiểu trong tủ lạnh.</p>
+
+                @if (!Model.Suggestions.Any())
+                {
+                    <div class="text-center py-6 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
+                        <span class="material-symbols-outlined text-slate-300 text-2xl mb-1">thumb_up</span>
+                        <p class="text-xs text-slate-400 font-semibold">Tủ lạnh của bạn đã đầy đủ!</p>
+                        <p class="text-[10px] text-slate-400">Không có thực phẩm nào hết hoặc dưới ngưỡng.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                        @foreach (var sug in Model.Suggestions)
+                        {
+                            <div class="p-3 bg-slate-50 hover:bg-slate-100/70 border border-slate-100 rounded-2xl flex items-center justify-between gap-3 transition-colors">
+                                <div class="min-w-0">
+                                    <div class="font-bold text-xs text-slate-800 truncate">@sug.FoodName</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5">
+                                        Hiện tại: <strong class="text-slate-600">@(sug.CurrentQuantity.ToString("0.##")) @sug.Unit</strong>
+                                    </div>
+                                    <div class="mt-1 flex items-center gap-1.5">
+                                        <span class="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-200 text-slate-600">@sug.CategoryName</span>
+                                        <span class="inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider
+                                            @(sug.Reason == "Hết hàng" ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600")">
+                                            @sug.Reason
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Add Suggestion to List Form -->
+                                <form asp-controller="ShoppingList" asp-action="AddSuggestion" method="post" class="shrink-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="foodItemId" value="@sug.FoodItemId" />
+                                    <button type="submit" 
+                                            class="h-8 w-8 rounded-xl bg-white hover:bg-primary hover:text-white border border-slate-200 hover:border-primary text-slate-600 flex items-center justify-center transition-all shadow-sm hover:-translate-y-0.5"
+                                            title="Thêm nhanh vào danh sách">
+                                        <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restock Confirmation Modal -->
+<div id="restock-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 transform transition-all animate-in fade-in zoom-in-95 duration-200">
+        <!-- Title -->
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-black text-slate-800 font-headline flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">kitchen</span>
+                <span>Nhập thực phẩm vào kho</span>
+            </h3>
+            <button type="button" onclick="closeRestockModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form asp-controller="ShoppingList" asp-action="RestockConfirm" method="post" class="space-y-5">
+            @Html.AntiForgeryToken()
+            
+            <!-- Hidden Fields -->
+            <input type="hidden" id="restock-item-id" name="id" value="" />
+
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Mặt hàng mua:</p>
+                <p id="restock-item-name" class="font-bold text-slate-800 text-base mt-0.5">N/A</p>
+            </div>
+
+            <!-- Quantity -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Số lượng nhập kho thực tế</label>
+                <div class="relative">
+                    <input type="number" id="restock-qty" name="quantity" step="0.01" min="0.01" required
+                           class="w-full rounded-2xl border border-slate-200 bg-white pl-4 pr-16 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all font-semibold" />
+                    <span id="restock-unit" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">đơn vị</span>
+                </div>
+            </div>
+
+            <!-- Expiry Date -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Hạn sử dụng mới</label>
+                <input type="date" id="restock-expiry" name="expiryDate" required
+                       class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all" />
+            </div>
+
+            <!-- Storage Location -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Vị trí cất giữ trong tủ</label>
+                <select name="storageLocationId" required
+                        class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all">
+                    @foreach (var loc in Model.StorageLocations)
+                    {
+                        <option value="@loc.Value">@loc.Text</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Category (Fallback/Override) -->
+            <div id="restock-category-container">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Danh mục thực phẩm</label>
+                <select id="restock-category-id" name="categoryId"
+                        class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all">
+                    <option value="">-- Giữ nguyên hoặc Tự động --</option>
+                    @foreach (var cat in Model.Categories)
+                    {
+                        <option value="@cat.Value">@cat.Text</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex items-center gap-3 pt-2">
+                <button type="button" onclick="closeRestockModal()"
+                        class="flex-1 inline-flex justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all">
+                    Hủy bỏ
+                </button>
+                <button type="submit"
+                        class="flex-1 inline-flex justify-center rounded-2xl bg-primary hover:bg-emerald-600 text-white px-4 py-3 text-sm font-bold transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)]">
+                    Nhập kho
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleHistoryCollapse() {
+            const section = document.getElementById('history-section');
+            const icon = document.getElementById('history-toggle-icon');
+            const text = document.getElementById('history-toggle-text');
+            
+            const isHidden = section.classList.contains('hidden');
+            if (isHidden) {
+                section.classList.remove('hidden');
+                text.innerText = 'Ẩn lịch sử';
+                icon.classList.add('rotate-180');
+            } else {
+                section.classList.add('hidden');
+                text.innerText = 'Hiện lịch sử';
+                icon.classList.remove('rotate-180');
+            }
+        }
+
+        function openRestockModal(itemId, itemName, itemQty, itemUnit, categoryId) {
+            document.getElementById('restock-item-id').value = itemId;
+            document.getElementById('restock-item-name').innerText = itemName;
+            document.getElementById('restock-qty').value = itemQty;
+            document.getElementById('restock-unit').innerText = itemUnit;
+            
+            // Set category input value if categoryId exists
+            const categorySelect = document.getElementById('restock-category-id');
+            if (categoryId && categorySelect) {
+                categorySelect.value = categoryId;
+            } else if (categorySelect) {
+                categorySelect.value = "";
+            }
+            
+            // Pre-fill expiry date default (today + 3 days)
+            const today = new Date();
+            const defaultExpiry = new Date(today);
+            defaultExpiry.setDate(today.getDate() + 3);
+            
+            const year = defaultExpiry.getFullYear();
+            const month = String(defaultExpiry.getMonth() + 1).padStart(2, '0');
+            const day = String(defaultExpiry.getDate()).padStart(2, '0');
+            document.getElementById('restock-expiry').value = `${year}-${month}-${day}`;
+            
+            // Show modal
+            const modal = document.getElementById('restock-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeRestockModal() {
+            const modal = document.getElementById('restock-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Close modal if user clicks outside of it
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('restock-modal');
+            if (event.target === modal) {
+                closeRestockModal();
+            }
+        });
+    </script>
+}

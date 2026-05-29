@@ -1,0 +1,30 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <div class="space-y-1">
+        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
+            <button type="submit" class="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all bg-gradient-to-r from-emerald-700 to-emerald-400 hover:brightness-105 text-white font-semibold text-left shadow-[0_4px_12px_-3px_rgba(16,185,129,0.3)]">
+                <span class="material-symbols-outlined text-[24px] text-white">logout</span>
+                <span class="text-[15px] text-white">Đăng xuất</span>
+            </button>
+        </form>
+    </div>
+}
+else
+{
+    <div class="space-y-2">
+        <a asp-area="Identity"
+           asp-page="/Account/Register"
+           class="w-full flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 text-[15px] font-semibold text-slate-700 hover:bg-slate-50 transition">
+            Đăng ký
+        </a>
+        <a asp-area="Identity"
+           asp-page="/Account/Login"
+           class="w-full flex items-center justify-center rounded-2xl bg-[#00ff95] px-4 py-3 text-[15px] font-semibold text-slate-900 hover:brightness-105 transition shadow-sm">
+            Đăng nhập
+        </a>
+    </div>
+}

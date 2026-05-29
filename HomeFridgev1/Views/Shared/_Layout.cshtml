@@ -1,0 +1,415 @@
+@inject HomeFridgev1.Services.Interfaces.ICurrentMemberService CurrentMemberService
+@inject HomeFridgev1.Data.ApplicationDbContext DbContext
+<!DOCTYPE html>
+<html class="light" lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Home's Fridge</title>
+
+    <script>
+        // Theme Detector Script chạy sớm tránh nhấp nháy giao diện
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/HomeFridgev1.styles.css" asp-append-version="true" />
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#a7f3d0", // emerald-200
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#64748b", // slate-500
+                        "on-background": "#0f172a", // slate-900
+                        "surface-container-low": "#f8fafc", // slate-50
+                        "primary": "#10b981", // emerald-500
+                        "on-primary-container": "#064e3b", // emerald-900
+                        "outline-variant": "#e2e8f0", // slate-200
+                        "on-surface": "#1e293b", // slate-800
+                        "surface": "#f8fafc" // slate-50
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans", "sans-serif"],
+                        "body": ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Manrope', sans-serif; }
+        h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
+        a { text-decoration: none !important; }
+
+        /* Dark Mode Overrides */
+        html.dark body {
+            background-color: #0b0f19 !important;
+            color: #cbd5e1 !important;
+        }
+
+        /* Nền trang chính */
+        html.dark .flex-1.flex.flex-col.h-screen.overflow-hidden.bg-\[\#faf8ff\],
+        html.dark .bg-surface,
+        html.dark body {
+            background-color: #0b0f19 !important;
+        }
+
+        /* Cards và Containers màu trắng */
+        html.dark .bg-white,
+        html.dark aside#app-sidebar,
+        html.dark .md\:hidden.flex.items-center.justify-between.bg-white {
+            background-color: #111827 !important; /* gray-900 / dark surface */
+            color: #cbd5e1 !important;
+        }
+
+        /* Border Overrides */
+        html.dark .border-slate-100,
+        html.dark .border-slate-200,
+        html.dark .border-slate-100\/50,
+        html.dark .border-slate-200\/50,
+        html.dark .border-slate-200,
+        html.dark .border,
+        html.dark hr {
+            border-color: #1f2937 !important; /* gray-800 */
+        }
+
+        /* Text Overrides */
+        html.dark .text-slate-900,
+        html.dark .text-\[\#131b2e\],
+        html.dark h1, html.dark h2, html.dark h3, html.dark h4,
+        html.dark .font-headline {
+            color: #f3f4f6 !important; /* gray-100 */
+        }
+
+        html.dark .text-slate-800,
+        html.dark .text-slate-700,
+        html.dark .text-slate-600 {
+            color: #cbd5e1 !important; /* gray-300 */
+        }
+
+        html.dark .text-slate-500,
+        html.dark .text-slate-400,
+        html.dark .text-on-surface-variant {
+            color: #9ca3af !important; /* gray-400 */
+        }
+
+        /* Hover states */
+        html.dark .hover\:bg-slate-50:hover,
+        html.dark .hover\:bg-slate-100:hover,
+        html.dark .hover\:bg-slate-50\/50:hover,
+        html.dark .group:hover {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+        }
+        
+        html.dark .even\:bg-slate-50\/30:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.01) !important;
+        }
+
+        /* Inputs & Form controls */
+        html.dark input,
+        html.dark select,
+        html.dark textarea,
+        html.dark .form-control {
+            background-color: #1f2937 !important; /* gray-800 */
+            border-color: #374151 !important; /* gray-700 */
+            color: #f3f4f6 !important;
+        }
+        html.dark input::placeholder {
+            color: #6b7280 !important;
+        }
+
+        /* Badges & Containers */
+        html.dark .bg-slate-50 {
+            background-color: #1f2937 !important;
+        }
+        html.dark .bg-slate-100 {
+            background-color: #1f2937 !important;
+        }
+
+        /* Modals */
+        html.dark .bg-slate-900\/40 {
+            background-color: rgba(0, 0, 0, 0.7) !important;
+        }
+
+        /* Bento/card hover */
+        html.dark .hover\:border-emerald-100:hover {
+            border-color: rgba(16, 185, 129, 0.2) !important;
+        }
+        html.dark .hover\:border-amber-100:hover {
+            border-color: rgba(245, 158, 11, 0.2) !important;
+        }
+        html.dark .hover\:border-rose-100:hover {
+            border-color: rgba(239, 68, 68, 0.2) !important;
+        }
+
+        /* Fix scrollbar in dark mode */
+        html.dark ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        html.dark ::-webkit-scrollbar-thumb {
+            background: #374151;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary-container flex h-screen overflow-hidden">
+    @{
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+        var isMemberSelectPage = currentController == "Members" && currentAction == "Select";
+        var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+
+        var isHome = currentController == "Home" && (currentAction == "Index" || string.IsNullOrEmpty(currentAction));
+        var isDashboard = currentController == "Home" && currentAction == "Dashboard";
+        var isFoodList = currentController == "Food" && (currentAction == "Index" || string.IsNullOrEmpty(currentAction));
+        var isAddFood = currentController == "Food" && currentAction == "Create";
+        var isArchived = currentController == "Food" && currentAction == "Archived";
+        var isHistory = currentController == "Food" && currentAction == "History";
+        var isCategories = currentController == "Categories";
+        var isStorageLocations = currentController == "StorageLocations";
+        var isMembers = currentController == "Members" && currentAction != "Select";
+        var isSettings = currentController == "Settings";
+        var isShoppingList = currentController == "ShoppingList";
+        var isRecipes = currentController == "Recipes";
+
+        var isCurrentMemberOwner = false;
+        var currentMemberId = CurrentMemberService.GetCurrentMemberId();
+        if (currentMemberId.HasValue)
+        {
+            var currentMember = DbContext.MemberProfiles.Find(currentMemberId.Value);
+            isCurrentMemberOwner = currentMember != null && currentMember.Role == HomeFridgev1.Models.Enums.MemberRole.Owner;
+        }
+    }
+
+    <!-- Mobile Header -->
+    <div class="md:hidden flex items-center justify-between bg-white px-6 py-4 border-b border-slate-200 z-30 fixed top-0 w-full shadow-sm">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">kitchen</span>
+            <span class="text-xl font-black text-[#131b2e] tracking-tight font-headline">Home's Fridge</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <button id="mobile-theme-toggle" class="text-slate-600 hover:bg-slate-100 p-2 rounded-xl transition-colors" title="Chuyển chế độ">
+                <span class="material-symbols-outlined text-[24px]">dark_mode</span>
+            </button>
+            <button id="mobile-menu-toggle" class="text-slate-600 hover:bg-slate-100 p-2 rounded-xl transition-colors">
+                <span class="material-symbols-outlined text-[28px]">menu</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden backdrop-blur-sm transition-opacity opacity-0 md:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-50 w-[308px] bg-white border-r border-slate-100 transform -translate-x-full md:translate-x-0 md:static md:flex flex-col h-full transition-transform duration-300 ease-in-out shadow-[10px_0_30px_-15px_rgba(0,0,0,0.05)]">
+        <div class="p-8 pb-4 hidden md:block">
+            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <span class="material-symbols-outlined text-primary text-[32px]" style="font-variation-settings: 'FILL' 1;">kitchen</span>
+                <span class="text-2xl font-black text-[#131b2e] tracking-tight font-headline">Home's Fridge</span>
+            </a>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto px-6 py-4 space-y-1.5 font-semibold scrollbar-hide">
+            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isHome ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                <span class="material-symbols-outlined text-[24px] @(isHome ? "text-primary" : "")">home</span>
+                <span class="text-[15px]">Trang chủ</span>
+            </a>
+            
+            <a asp-controller="Home" asp-action="Dashboard" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isDashboard ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                <span class="material-symbols-outlined text-[24px] @(isDashboard ? "text-primary" : "")">grid_view</span>
+                <span class="text-[15px]">Tổng quan</span>
+            </a>
+
+            <a asp-controller="Food" asp-action="Index" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isFoodList ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                <span class="material-symbols-outlined text-[24px] @(isFoodList ? "text-primary" : "")">restaurant</span>
+                <span class="text-[15px]">Danh sách thực phẩm</span>
+            </a>
+
+            <a asp-controller="ShoppingList" asp-action="Index" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isShoppingList ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                <span class="material-symbols-outlined text-[24px] @(isShoppingList ? "text-primary" : "")">shopping_cart</span>
+                <span class="text-[15px]">Đi chợ (Mua sắm)</span>
+            </a>
+
+            <a asp-controller="Recipes" asp-action="Suggestions" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isRecipes ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                <span class="material-symbols-outlined text-[24px] @(isRecipes ? "text-primary" : "")">restaurant_menu</span>
+                <span class="text-[15px]">Gợi ý & Công thức</span>
+            </a>
+
+            <a asp-controller="Food" asp-action="Create" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isAddFood ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                <span class="material-symbols-outlined text-[24px] @(isAddFood ? "text-primary" : "")">add_box</span>
+                <span class="text-[15px]">Thêm thực phẩm</span>
+            </a>
+
+            <a asp-controller="Food" asp-action="Archived" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isArchived ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                <span class="material-symbols-outlined text-[24px] @(isArchived ? "text-primary" : "")">archive</span>
+                <span class="text-[15px]">Lưu trữ</span>
+            </a>
+
+            <a asp-controller="Food" asp-action="History" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isHistory ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                <span class="material-symbols-outlined text-[24px] @(isHistory ? "text-primary" : "")">history</span>
+                <span class="text-[15px]">Lịch sử</span>
+            </a>
+
+            <a asp-controller="Categories" asp-action="Index" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isCategories ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                <span class="material-symbols-outlined text-[24px] @(isCategories ? "text-primary" : "")">category</span>
+                <span class="text-[15px]">Danh mục</span>
+            </a>
+
+            <a asp-controller="StorageLocations" asp-action="Index" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isStorageLocations ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                <span class="material-symbols-outlined text-[24px] @(isStorageLocations ? "text-primary" : "")">location_on</span>
+                <span class="text-[15px]">Vị trí lưu trữ</span>
+            </a>
+
+            <a asp-controller="Members" asp-action="Index" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isMembers ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                <span class="material-symbols-outlined text-[24px] @(isMembers ? "text-primary" : "")">group</span>
+                <span class="text-[15px]">Thành viên</span>
+            </a>
+
+            @if (isCurrentMemberOwner)
+            {
+                <a asp-controller="Settings" asp-action="Index" class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all @(isSettings ? "bg-primary-container text-on-primary-container font-bold shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")">
+                    <span class="material-symbols-outlined text-[24px] @(isSettings ? "text-primary" : "")">settings</span>
+                    <span class="text-[15px]">Cài đặt</span>
+                </a>
+            }
+
+            <button id="theme-toggle-btn" type="button" class="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-left font-semibold">
+                <span class="material-symbols-outlined text-[24px]">dark_mode</span>
+                <span class="text-[15px] theme-label-text">Chế độ tối</span>
+            </button>
+            
+            <div class="pt-6 pb-2">
+                <a asp-controller="Food" asp-action="Create" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-emerald-600 text-white font-bold text-[15px] py-4 rounded-2xl shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] transition-all hover:-translate-y-0.5">
+                    Thêm mới
+                </a>
+            </div>
+        </nav>
+
+        <div class="p-6 border-t border-slate-100/50 relative">
+            <partial name="_LoginPartial" />
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col h-screen overflow-hidden pt-[76px] md:pt-0 bg-[#faf8ff]">
+        @if (isAuthenticated && !isMemberSelectPage)
+        {
+            <div class="flex-shrink-0">
+                @await Component.InvokeAsync("CurrentMember")
+            </div>
+        }
+
+        <main role="main" class="flex-1 overflow-y-auto pb-10">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Sidebar Toggle & Theme Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sidebar Mobile Toggle
+            const toggleBtn = document.getElementById('mobile-menu-toggle');
+            const sidebar = document.getElementById('app-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            if(toggleBtn && sidebar && overlay) {
+                const closeSidebar = () => {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                    }, 300);
+                };
+
+                const openSidebar = () => {
+                    overlay.classList.remove('hidden');
+                    setTimeout(() => {
+                        overlay.classList.remove('opacity-0');
+                        sidebar.classList.remove('-translate-x-full');
+                    }, 10);
+                };
+
+                toggleBtn.addEventListener('click', () => {
+                    if (sidebar.classList.contains('-translate-x-full')) {
+                        openSidebar();
+                    } else {
+                        closeSidebar();
+                    }
+                });
+
+                overlay.addEventListener('click', closeSidebar);
+            }
+
+            // Theme Toggle Logic
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+
+            const updateThemeUI = (isDark) => {
+                const themeIcons = document.querySelectorAll('#theme-toggle-btn span.material-symbols-outlined, #mobile-theme-toggle span.material-symbols-outlined');
+                const themeLabels = document.querySelectorAll('.theme-label-text');
+
+                themeIcons.forEach(icon => {
+                    icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+                });
+
+                themeLabels.forEach(label => {
+                    label.textContent = isDark ? 'Chế độ sáng' : 'Chế độ tối';
+                });
+            };
+
+            const toggleTheme = () => {
+                const html = document.documentElement;
+                const isDark = html.classList.contains('dark');
+                
+                if (isDark) {
+                    html.classList.remove('dark');
+                    html.classList.add('light');
+                    localStorage.setItem('theme', 'light');
+                    updateThemeUI(false);
+                } else {
+                    html.classList.remove('light');
+                    html.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                    updateThemeUI(true);
+                }
+
+                // Gửi sự kiện để vẽ lại các biểu đồ Chart.js nếu cần
+                window.dispatchEvent(new CustomEvent('themeChanged', { 
+                    detail: { theme: localStorage.getItem('theme') || 'light' } 
+                }));
+            };
+
+            if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+            if (mobileThemeToggle) mobileThemeToggle.addEventListener('click', toggleTheme);
+
+            // Đồng bộ UI nút bấm ban đầu
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            updateThemeUI(currentTheme === 'dark');
+        });
+    </script>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

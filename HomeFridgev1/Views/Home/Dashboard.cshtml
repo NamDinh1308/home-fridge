@@ -1,0 +1,650 @@
+@model HomeFridgev1.Models.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Tổng quan";
+}
+
+<div class="max-w-[1075px] mx-auto px-4 sm:px-8 py-6 sm:py-10">
+    <div class="mb-8 md:mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl md:text-4xl font-black text-slate-900 font-headline tracking-tight">Tổng quan kho thực phẩm</h1>
+            <p class="text-on-surface-variant font-medium mt-1 text-sm md:text-base">@Model.HouseholdName</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="@Url.Action("Create", "Food")" class="flex-1 md:flex-none inline-flex items-center justify-center rounded-2xl bg-primary px-4 md:px-5 py-2.5 font-bold text-sm md:text-base text-white hover:bg-emerald-600 transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] hover:-translate-y-0.5">
+                <span class="material-symbols-outlined mr-2 text-[18px] md:text-[20px]">add</span>
+                Thêm thực phẩm
+            </a>
+            <a href="@Url.Action("Index", "Food")" class="flex-1 md:flex-none inline-flex items-center justify-center rounded-2xl bg-white border border-slate-200 px-4 md:px-5 py-2.5 font-bold text-sm md:text-base text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
+                <span class="material-symbols-outlined mr-2 text-[18px] md:text-[20px]">kitchen</span>
+                Kho đồ
+            </a>
+        </div>
+    </div>
+
+    <!-- Tóm tắt số liệu (Stats) -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
+        <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md hover:border-emerald-100">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 sm:mb-4">
+                <span class="material-symbols-outlined text-[20px] sm:text-[24px]">inventory_2</span>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-bold text-slate-500 mb-1">Hiện đang có</p>
+                <p class="counter-value text-2xl sm:text-3xl font-black text-slate-900 font-headline" data-target="@Model.ActiveFoodCount">0</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md hover:border-amber-100">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-3 sm:mb-4">
+                <span class="material-symbols-outlined text-[20px] sm:text-[24px]">warning</span>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-bold text-slate-500 mb-1">Sắp hết hạn</p>
+                <p class="counter-value text-2xl sm:text-3xl font-black text-slate-900 font-headline" data-target="@Model.ExpiringSoonCount">0</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md hover:border-rose-100">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mb-3 sm:mb-4">
+                <span class="material-symbols-outlined text-[20px] sm:text-[24px]">remove_shopping_cart</span>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-bold text-slate-500 mb-1">Hết hàng</p>
+                <p class="counter-value text-2xl sm:text-3xl font-black text-slate-900 font-headline" data-target="@Model.OutOfStockCount">0</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md hover:border-slate-200">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-slate-50 text-slate-500 flex items-center justify-center mb-3 sm:mb-4">
+                <span class="material-symbols-outlined text-[20px] sm:text-[24px]">archive</span>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-bold text-slate-500 mb-1">Đã lưu trữ</p>
+                <p class="counter-value text-2xl sm:text-3xl font-black text-slate-900 font-headline" data-target="@Model.ArchivedCount">0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ & Phân tích trực quan (Giai đoạn 3) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- 1. Phân bổ trạng thái thực phẩm -->
+        <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:shadow-md">
+            <div>
+                <h3 class="text-sm sm:text-base font-bold text-slate-800 font-headline mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-emerald-500">pie_chart</span>
+                    Trạng thái thực phẩm
+                </h3>
+                <div class="relative flex items-center justify-center h-48">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Phân bổ thực phẩm theo Danh mục -->
+        <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:shadow-md">
+            <div>
+                <h3 class="text-sm sm:text-base font-bold text-slate-800 font-headline mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-500">bar_chart</span>
+                    Thực phẩm theo danh mục
+                </h3>
+                <div class="relative flex items-center justify-center h-48">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Chỉ số sử dụng & Hoạt động thành viên -->
+        <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:shadow-md">
+            <div>
+                <h3 class="text-sm sm:text-base font-bold text-slate-800 font-headline mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-rose-500">analytics</span>
+                    Chỉ số tủ lạnh
+                </h3>
+                
+                <!-- Chỉ số lãng phí tủ lạnh (Fridge Health Score) -->
+                @{
+                    decimal totalConsumed = Model.WasteAnalysis.Sum(w => w.ConsumedQuantity);
+                    decimal totalDiscarded = Model.WasteAnalysis.Sum(w => w.DiscardedQuantity);
+                    decimal wasteRate = 0;
+                    if (totalConsumed + totalDiscarded > 0)
+                    {
+                        wasteRate = (totalDiscarded / (totalConsumed + totalDiscarded)) * 100;
+                    }
+                    
+                    string healthText = "Tuyệt vời";
+                    string healthClass = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                    string healthDesc = "Tỷ lệ lãng phí thực phẩm cực kỳ thấp. Rất tốt!";
+                    
+                    if (wasteRate > 25)
+                    {
+                        healthText = "Lãng phí cao";
+                        healthClass = "bg-rose-50 text-rose-700 border-rose-100";
+                        healthDesc = "Tỷ lệ lãng phí cao! Nên ưu tiên dùng thực phẩm sắp hết hạn.";
+                    }
+                    else if (wasteRate > 10)
+                    {
+                        healthText = "Cần chú ý";
+                        healthClass = "bg-amber-50 text-amber-700 border-amber-100";
+                        healthDesc = "Lượng thực phẩm bỏ đi ở mức trung bình. Hãy chú ý hơn.";
+                    }
+                }
+                
+                <div class="border rounded-2xl p-4 @healthClass mb-5 flex items-center justify-between gap-2 shadow-sm">
+                    <div class="flex-1 pr-1">
+                        <p class="text-[10px] font-bold uppercase tracking-wider opacity-75 mb-0.5">Tỷ lệ lãng phí (7 ngày)</p>
+                        <p class="counter-value text-xl sm:text-2xl font-black font-headline tracking-tight" data-target="@wasteRate.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)" data-decimals="1" data-suffix="%">0.0%</p>
+                        <p class="text-[10px] sm:text-[11px] font-semibold mt-1 leading-snug">@healthDesc</p>
+                    </div>
+                    <div class="text-center px-2 py-1 rounded-lg border border-current font-black text-[9px] sm:text-[10px] uppercase shrink-0">
+                        @healthText
+                    </div>
+                </div>
+                
+                <!-- Tiến trình thành viên (Active Members) -->
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Đóng góp của thành viên (30 ngày)</p>
+                    <div class="flex flex-col gap-3 max-h-32 overflow-y-auto pr-1">
+                        @if (Model.MemberActivities.Any())
+                        {
+                            var maxActivity = Model.MemberActivities.Max(m => m.ActivityCount);
+                            foreach (var member in Model.MemberActivities)
+                            {
+                                int percent = maxActivity > 0 ? (member.ActivityCount * 100 / maxActivity) : 0;
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 text-xs font-bold text-slate-600 overflow-hidden shadow-sm">
+                                        @if (!string.IsNullOrEmpty(member.AvatarPath))
+                                        {
+                                            <img src="@member.AvatarPath" alt="@member.MemberName" class="w-full h-full object-cover" />
+                                        }
+                                        else
+                                        {
+                                            <span>@member.MemberName.Substring(0, Math.Min(1, member.MemberName.Length))</span>
+                                        }
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+                                            <span class="truncate pr-1">@member.MemberName</span>
+                                            <span class="shrink-0 text-slate-500">@member.ActivityCount h/đ</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
+                                            <div class="bg-primary h-full rounded-full transition-all duration-500" style="width: @percent%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-xs text-slate-400 italic">Chưa ghi nhận hoạt động nào.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Tiêu dùng vs Lãng phí (Grouped Bar Chart - full width) -->
+    <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 mb-8 md:mb-12 transition-all hover:shadow-md">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <h3 class="text-sm sm:text-base font-bold text-slate-800 font-headline flex items-center gap-2">
+                <span class="material-symbols-outlined text-indigo-500">show_chart</span>
+                Xu hướng sử dụng & Lãng phí
+            </h3>
+            <div class="flex rounded-xl bg-slate-100 p-0.5" id="wasteToggle">
+                <button type="button" data-range="week" class="waste-range-btn px-3 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-xs font-bold rounded-lg transition-all bg-white text-indigo-700 shadow-sm">7 ngày</button>
+                <button type="button" data-range="month" class="waste-range-btn px-3 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700">1 tháng</button>
+            </div>
+        </div>
+        <div class="relative h-60 sm:h-64 w-full">
+            <canvas id="wasteChart"></canvas>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <!-- Thực phẩm cần chú ý (Priority Items) -->
+        <div>
+            <h2 class="text-xl font-bold font-headline text-slate-900 mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-rose-500">priority_high</span>
+                Cần chú ý ngay
+            </h2>
+            
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-2">
+                @if (Model.PriorityItems.Any())
+                {
+                    <div class="flex flex-col gap-2">
+                        @foreach (var item in Model.PriorityItems)
+                        {
+                            <a href="@Url.Action("Edit", "Food", new { id = item.FoodId })" class="flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-colors group">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden shrink-0">
+                                        @if (!string.IsNullOrEmpty(item.ImagePath))
+                                        {
+                                            <img src="@item.ImagePath" alt="@item.FoodName" class="w-full h-full object-cover" />
+                                        }
+                                        else
+                                        {
+                                            <div class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
+                                                <span class="material-symbols-outlined">restaurant</span>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-900 font-headline group-hover:text-primary transition-colors">@item.FoodName</p>
+                                        <p class="text-sm text-slate-500">Còn @item.CurrentQuantity @item.Unit</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-right flex flex-col items-end gap-1">
+                                    @if (item.Status == HomeFridgev1.Models.Enums.FoodStatus.Expired)
+                                    {
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">Đã hết hạn</span>
+                                    }
+                                    else if (item.Status == HomeFridgev1.Models.Enums.FoodStatus.Urgent)
+                                    {
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700">Hết hạn sớm</span>
+                                    }
+                                    else if (item.Status == HomeFridgev1.Models.Enums.FoodStatus.OutOfStock)
+                                    {
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">Hết hàng</span>
+                                    }
+                                    else if (item.Status == HomeFridgev1.Models.Enums.FoodStatus.Warning)
+                                    {
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-100 text-orange-700">Cảnh báo</span>
+                                    }
+                                    <span class="text-xs text-slate-400">@item.ExpiryDate.ToString("dd/MM/yyyy")</span>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="p-8 text-center text-slate-500">
+                        <span class="material-symbols-outlined text-4xl mb-2 opacity-50">check_circle</span>
+                        <p class="font-medium">Tuyệt vời! Không có thực phẩm nào cần xử lý gấp.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Hoạt động gần đây (Recent Activities) -->
+        <div>
+            <h2 class="text-xl font-bold font-headline text-slate-900 mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-emerald-500">history</span>
+                Hoạt động gần đây
+            </h2>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 relative">
+                @if (Model.RecentActivities.Any())
+                {
+                    <div class="absolute left-[43px] top-10 bottom-10 w-0.5 bg-slate-100 z-0"></div>
+                    <div class="flex flex-col gap-6 relative z-10">
+                        @foreach (var activity in Model.RecentActivities)
+                        {
+                            <div class="flex gap-4">
+                                @{
+                                    var iconClass = "bg-slate-100 text-slate-500";
+                                    var iconName = "info";
+                                    var actionText = "Cập nhật";
+                                    
+                                    if (activity.ActivityType == HomeFridgev1.Models.Enums.FoodActivityType.Create)
+                                    {
+                                        iconClass = "bg-emerald-100 text-emerald-600";
+                                        iconName = "add";
+                                        actionText = "Thêm mới";
+                                    }
+                                    else if (activity.ActivityType == HomeFridgev1.Models.Enums.FoodActivityType.Consume)
+                                    {
+                                        iconClass = "bg-blue-100 text-blue-600";
+                                        iconName = "restaurant";
+                                        actionText = "Đã dùng";
+                                    }
+                                    else if (activity.ActivityType == HomeFridgev1.Models.Enums.FoodActivityType.Restock)
+                                    {
+                                        iconClass = "bg-purple-100 text-purple-600";
+                                        iconName = "shopping_cart";
+                                        actionText = "Bổ sung";
+                                    }
+                                    else if (activity.ActivityType == HomeFridgev1.Models.Enums.FoodActivityType.Archive)
+                                    {
+                                        iconClass = "bg-slate-100 text-slate-500";
+                                        iconName = "archive";
+                                        actionText = "Lưu trữ";
+                                    }
+                                }
+                                <div class="w-10 h-10 rounded-full @iconClass shrink-0 flex items-center justify-center shadow-sm border-2 border-white relative z-10">
+                                    <span class="material-symbols-outlined text-[20px]">@iconName</span>
+                                </div>
+                                <div class="pt-2 flex-1">
+                                    <p class="text-sm font-medium text-slate-900">
+                                        <span class="font-bold">@actionText</span> @activity.FoodName
+                                    </p>
+                                    @if (activity.QuantityDelta != 0)
+                                    {
+                                        <p class="text-xs text-slate-500 mt-0.5">Số lượng thay đổi: @(activity.QuantityDelta > 0 ? "+" : "")@activity.QuantityDelta</p>
+                                    }
+                                    <p class="text-[11px] text-slate-400 mt-1">@activity.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="py-8 text-center text-slate-500">
+                        <span class="material-symbols-outlined text-4xl mb-2 opacity-50">hourglass_empty</span>
+                        <p class="font-medium">Chưa có hoạt động nào được ghi nhận.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Hiệu ứng nhảy số (Counter Animation)
+            function animateCounters() {
+                const counters = document.querySelectorAll('.counter-value');
+                counters.forEach(counter => {
+                    const target = parseFloat(counter.getAttribute('data-target'));
+                    const decimals = parseInt(counter.getAttribute('data-decimals') || '0');
+                    const suffix = counter.getAttribute('data-suffix') || '';
+                    const duration = 2500; // Thời gian chạy là 2.5 giây cho chậm rãi và mượt mà
+                    const startTime = performance.now();
+                    
+                    function updateCounter(currentTime) {
+                        const elapsedTime = currentTime - startTime;
+                        const progress = Math.min(elapsedTime / duration, 1);
+                        
+                        // Easing function: easeOutQuart
+                        const easeProgress = 1 - Math.pow(1 - progress, 4);
+                        const currentValue = easeProgress * target;
+                        
+                        if (decimals > 0) {
+                            counter.textContent = currentValue.toFixed(decimals) + suffix;
+                        } else {
+                            counter.textContent = Math.floor(currentValue) + suffix;
+                        }
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(updateCounter);
+                        } else {
+                            if (decimals > 0) {
+                                counter.textContent = target.toFixed(decimals) + suffix;
+                            } else {
+                                counter.textContent = target + suffix;
+                            }
+                        }
+                    }
+                    
+                    requestAnimationFrame(updateCounter);
+                });
+            }
+
+            // Chạy hiệu ứng nhảy số
+            animateCounters();
+
+            // Cấu hình màu sắc biểu đồ theo theme (Chế độ sáng/tối)
+            function getChartThemeColors() {
+                const isDark = document.documentElement.classList.contains('dark');
+                return {
+                    text: isDark ? '#9ca3af' : '#64748b', // slate-400 / slate-500
+                    grid: isDark ? '#1f2937' : '#f1f5f9'  // gray-800 / slate-100
+                };
+            }
+
+            // Cấu hình chung cho animation của biểu đồ (chạy chậm hơn và mượt mà hơn)
+            const slowAnimationConfig = {
+                duration: 2500, // 2.5 giây
+                easing: 'easeInOutQuart' // Hiệu ứng mượt mà từ từ
+            };
+
+            const chartInstances = [];
+            const currentColors = getChartThemeColors();
+
+            // 1. Status Chart (Doughnut)
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            const statusChart = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Bình thường', 'Cảnh báo', 'Khẩn cấp', 'Hết hạn', 'Hết hàng'],
+                    datasets: [{
+                        data: [@Model.NormalCount, @Model.WarningCount, @Model.UrgentCount, @Model.ExpiredCount, @Model.OutOfStockCount],
+                        backgroundColor: [
+                            '#10B981', // Normal
+                            '#F59E0B', // Warning
+                            '#EF4444', // Urgent
+                            '#DC2626', // Expired
+                            '#6B7280'  // OutOfStock
+                        ],
+                        borderWidth: 2,
+                        borderColor: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: slowAnimationConfig,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 10,
+                                font: {
+                                    size: 10,
+                                    weight: 'bold'
+                                },
+                                color: currentColors.text,
+                                padding: 8
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+            chartInstances.push(statusChart);
+
+            // 2. Category Chart (Horizontal Bar)
+            const categoryData = @Html.Raw(Json.Serialize(Model.CategoryDistribution));
+            const categoryNames = categoryData.map(c => c.categoryName || c.CategoryName);
+            const categoryCounts = categoryData.map(c => c.foodItemCount !== undefined ? c.foodItemCount : c.FoodItemCount);
+
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            const categoryChart = new Chart(categoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: categoryNames.length > 0 ? categoryNames : ['Chưa có dữ liệu'],
+                    datasets: [{
+                        label: 'Số loại thực phẩm',
+                        data: categoryCounts.length > 0 ? categoryCounts : [0],
+                        backgroundColor: '#3B82F6',
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: slowAnimationConfig,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 9
+                                },
+                                color: currentColors.text
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                font: {
+                                    size: 9,
+                                    weight: 'bold'
+                                },
+                                color: currentColors.text
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            chartInstances.push(categoryChart);
+
+            // 3. Waste Analysis Chart (Grouped Bar Chart) với toggle 7 ngày / 1 tháng
+            const wasteDataWeek = @Html.Raw(Json.Serialize(Model.WasteAnalysis));
+            const wasteDataMonth = @Html.Raw(Json.Serialize(Model.WasteAnalysisMonthly));
+
+            function extractWasteFields(data) {
+                return {
+                    labels: data.map(w => w.dateStr || w.DateStr),
+                    consumed: data.map(w => w.consumedQuantity !== undefined ? w.consumedQuantity : w.ConsumedQuantity),
+                    discarded: data.map(w => w.discardedQuantity !== undefined ? w.discardedQuantity : w.DiscardedQuantity)
+                };
+            }
+
+            const weekFields = extractWasteFields(wasteDataWeek);
+            const monthFields = extractWasteFields(wasteDataMonth);
+
+            const wasteCtx = document.getElementById('wasteChart').getContext('2d');
+            const wasteChart = new Chart(wasteCtx, {
+                type: 'bar',
+                data: {
+                    labels: weekFields.labels,
+                    datasets: [
+                        {
+                            label: 'Tiêu thụ (Đã dùng)',
+                            data: weekFields.consumed,
+                            backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                            borderColor: '#3B82F6',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Lãng phí (Bỏ đi)',
+                            data: weekFields.discarded,
+                            backgroundColor: 'rgba(244, 63, 94, 0.85)',
+                            borderColor: '#F43F5E',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: slowAnimationConfig,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                boxWidth: 12,
+                                font: {
+                                    size: 10,
+                                    weight: 'bold'
+                                },
+                                color: currentColors.text
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                },
+                                color: currentColors.text
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: currentColors.grid
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                },
+                                color: currentColors.text
+                            }
+                        }
+                    }
+                }
+            });
+            chartInstances.push(wasteChart);
+
+            // Toggle 7 ngày / 1 tháng
+            document.querySelectorAll('.waste-range-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const range = this.dataset.range;
+                    const fields = range === 'month' ? monthFields : weekFields;
+
+                    wasteChart.data.labels = fields.labels;
+                    wasteChart.data.datasets[0].data = fields.consumed;
+                    wasteChart.data.datasets[1].data = fields.discarded;
+                    wasteChart.update();
+
+                    // Cập nhật giao diện nút active
+                    document.querySelectorAll('.waste-range-btn').forEach(b => {
+                        b.classList.remove('bg-white', 'text-indigo-700', 'shadow-sm');
+                        b.classList.add('text-slate-500');
+                    });
+                    this.classList.add('bg-white', 'text-indigo-700', 'shadow-sm');
+                    this.classList.remove('text-slate-500');
+                });
+            });
+
+            // Lắng nghe sự kiện đổi theme để vẽ lại các biểu đồ với màu sắc phù hợp
+            window.addEventListener('themeChanged', function () {
+                const colors = getChartThemeColors();
+                const isDark = document.documentElement.classList.contains('dark');
+
+                chartInstances.forEach(chart => {
+                    // Cập nhật màu đường viền của doughnut dataset
+                    if (chart.config.type === 'doughnut') {
+                        chart.data.datasets[0].borderColor = isDark ? '#1e293b' : '#ffffff';
+                    }
+
+                    // Cập nhật màu sắc legend
+                    if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+                        chart.options.plugins.legend.labels.color = colors.text;
+                    }
+
+                    // Cập nhật màu sắc các trục tọa độ
+                    if (chart.options.scales) {
+                        for (let axis in chart.options.scales) {
+                            const scale = chart.options.scales[axis];
+                            if (scale.ticks) {
+                                scale.ticks.color = colors.text;
+                            }
+                            if (scale.grid && axis === 'y') {
+                                scale.grid.color = colors.grid;
+                            }
+                        }
+                    }
+
+                    // Gọi vẽ lại biểu đồ mà không khởi tạo lại từ đầu
+                    chart.update('none'); // dùng 'none' để update mượt mà tức thời không chạy lại animation từ đầu
+                });
+            });
+        });
+    </script>
+}

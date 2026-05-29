@@ -1,0 +1,441 @@
+[
+  {
+    "id": "instant_noodles",
+    "name": "Mì gói",
+    "categoryKey": "dried",
+    "imagePath": "/assets/food-library/Dried/instant-noodles.webp",
+    "tags": [
+      "mi goi",
+      "mì gói",
+      "instant noodles",
+      "noodles",
+      "dried"
+    ]
+  },
+  {
+    "id": "rice",
+    "name": "Gạo",
+    "categoryKey": "dried",
+    "imagePath": "/assets/food-library/Dried/rice.jpg",
+    "tags": [
+      "gao",
+      "gạo",
+      "rice",
+      "dried"
+    ]
+  },
+  {
+    "id": "fresh_milk",
+    "name": "Sữa tươi",
+    "categoryKey": "drink",
+    "imagePath": "/assets/food-library/drink/fresh-milk.jpg",
+    "tags": [
+      "sua tuoi",
+      "sữa tươi",
+      "milk",
+      "fresh milk",
+      "drink",
+      "dairy"
+    ]
+  },
+  {
+    "id": "orange_juice",
+    "name": "Nước cam",
+    "categoryKey": "drink",
+    "imagePath": "/assets/food-library/drink/orange-juice.jpg",
+    "tags": [
+      "nuoc cam",
+      "nước cam",
+      "orange juice",
+      "juice",
+      "drink"
+    ]
+  },
+  {
+    "id": "yogurt",
+    "name": "Sữa chua",
+    "categoryKey": "drink",
+    "imagePath": "/assets/food-library/drink/yogurt.webp",
+    "tags": [
+      "sua chua",
+      "sữa chua",
+      "yogurt",
+      "yoghurt",
+      "drink",
+      "dairy"
+    ]
+  },
+  {
+    "id": "apple_green",
+    "name": "Táo xanh",
+    "categoryKey": "fruit",
+    "imagePath": "/assets/food-library/fruit/apple-green.jpg",
+    "tags": [
+      "tao xanh",
+      "táo xanh",
+      "apple",
+      "green apple",
+      "fruit"
+    ]
+  },
+  {
+    "id": "banana",
+    "name": "Chuối",
+    "categoryKey": "fruit",
+    "imagePath": "/assets/food-library/fruit/banana.jpg",
+    "tags": [
+      "chuoi",
+      "chuối",
+      "banana",
+      "fruit"
+    ]
+  },
+  {
+    "id": "grape_purple",
+    "name": "Nho tím",
+    "categoryKey": "fruit",
+    "imagePath": "/assets/food-library/fruit/grape-purple.jpg",
+    "tags": [
+      "nho tim",
+      "nho tím",
+      "grape",
+      "purple grape",
+      "fruit"
+    ]
+  },
+  {
+    "id": "orange",
+    "name": "Cam",
+    "categoryKey": "fruit",
+    "imagePath": "/assets/food-library/fruit/orange.jpg",
+    "tags": [
+      "cam",
+      "orange",
+      "fruit"
+    ]
+  },
+  {
+    "id": "watermelon",
+    "name": "Dưa hấu",
+    "categoryKey": "fruit",
+    "imagePath": "/assets/food-library/fruit/watermelon.jpg",
+    "tags": [
+      "dua hau",
+      "dưa hấu",
+      "watermelon",
+      "fruit"
+    ]
+  },
+  {
+    "id": "chicken",
+    "name": "Thịt gà",
+    "categoryKey": "meat",
+    "imagePath": "/assets/food-library/meat/chicken.jpg",
+    "tags": [
+      "thit ga",
+      "thịt gà",
+      "chicken",
+      "meat"
+    ]
+  },
+  {
+    "id": "egg",
+    "name": "Trứng gà",
+    "categoryKey": "meat",
+    "imagePath": "/assets/food-library/meat/egg.jpg",
+    "tags": [
+      "trung ga",
+      "trứng gà",
+      "egg",
+      "eggs",
+      "protein"
+    ]
+  },
+  {
+    "id": "pork",
+    "name": "Thịt heo",
+    "categoryKey": "meat",
+    "imagePath": "/assets/food-library/meat/pork.jpg",
+    "tags": [
+      "thit heo",
+      "thịt heo",
+      "pork",
+      "meat"
+    ]
+  },
+  {
+    "id": "salmon",
+    "name": "Cá hồi",
+    "categoryKey": "meat",
+    "imagePath": "/assets/food-library/meat/samol.jpg",
+    "tags": [
+      "ca hoi",
+      "cá hồi",
+      "salmon",
+      "fish",
+      "seafood"
+    ]
+  },
+  {
+    "id": "shrimp",
+    "name": "Tôm",
+    "categoryKey": "meat",
+    "imagePath": "/assets/food-library/meat/shrimp.jpg",
+    "tags": [
+      "tom",
+      "tôm",
+      "shrimp",
+      "seafood"
+    ]
+  },
+  {
+    "id": "carrot",
+    "name": "Cà rốt",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/carrot.jpg",
+    "tags": [
+      "ca rot",
+      "cà rốt",
+      "carrot",
+      "vegetable"
+    ]
+  },
+  {
+    "id": "cucumber",
+    "name": "Dưa leo",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/cucumber.jpg",
+    "tags": [
+      "dua leo",
+      "dưa leo",
+      "cucumber",
+      "vegetable"
+    ]
+  },
+  {
+    "id": "lettuce",
+    "name": "Xà lách",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/lettuce.jpg",
+    "tags": [
+      "xa lach",
+      "xà lách",
+      "lettuce",
+      "vegetable"
+    ]
+  },
+  {
+    "id": "potato",
+    "name": "Khoai tây",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/potato.jpg",
+    "tags": [
+      "khoai tay",
+      "khoai tây",
+      "potato",
+      "vegetable"
+    ]
+  },
+  {
+    "id": "tomato",
+    "name": "Cà chua",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/tomato.jpg",
+    "tags": [
+      "ca chua",
+      "cà chua",
+      "tomato",
+      "vegetable"
+    ]
+  },
+  {
+    "id": "mango",
+    "name": "Xoài",
+    "categoryKey": "fruit",
+    "imagePath": "/assets/food-library/fruit/mango.jpg",
+    "tags": [
+      "Xoài",
+      "xoài",
+      "xoai",
+      "mango",
+      "fruit"
+    ]
+  },
+  {
+    "id": "thit_ba_chi",
+    "name": "Thịt ba chỉ",
+    "categoryKey": "meat",
+    "imagePath": "/assets/food-library/meat/thit-ba-chi.jpg",
+    "tags": [
+      "thit ba chi",
+      "thịt ba chỉ",
+      "pork belly",
+      "meat",
+      "heo",
+      "lợn"
+    ]
+  },
+  {
+    "id": "thit_bam",
+    "name": "Thịt băm",
+    "categoryKey": "meat",
+    "imagePath": "/assets/food-library/meat/thit-bam.jpg",
+    "tags": [
+      "thit bam",
+      "thịt băm",
+      "minced pork",
+      "meat",
+      "heo",
+      "lợn"
+    ]
+  },
+  {
+    "id": "thit_bo_phi_le",
+    "name": "Thịt bò phi lê",
+    "categoryKey": "meat",
+    "imagePath": "/assets/food-library/meat/thit-bo-phi-le.jpg",
+    "tags": [
+      "thit bo phi le",
+      "thịt bò phi lê",
+      "beef",
+      "meat",
+      "bò"
+    ]
+  },
+  {
+    "id": "suon_non",
+    "name": "Sườn non",
+    "categoryKey": "meat",
+    "imagePath": "/assets/food-library/meat/suon-non.jpg",
+    "tags": [
+      "suon non",
+      "sườn non",
+      "pork ribs",
+      "meat",
+      "heo",
+      "lợn"
+    ]
+  },
+  {
+    "id": "dau_hu",
+    "name": "Đậu hũ",
+    "categoryKey": "dried",
+    "imagePath": "/assets/food-library/Dried/dau-hu.jpg",
+    "tags": [
+      "dau hu",
+      "đậu hũ",
+      "tofu",
+      "dried",
+      "đậu phụ"
+    ]
+  },
+  {
+    "id": "dau_an",
+    "name": "Dầu ăn",
+    "categoryKey": "dried",
+    "imagePath": "/assets/food-library/Dried/dau-an.jpg",
+    "tags": [
+      "dau an",
+      "dầu ăn",
+      "cooking oil",
+      "dried"
+    ]
+  },
+  {
+    "id": "nuoc_dua",
+    "name": "Nước dừa",
+    "categoryKey": "drink",
+    "imagePath": "/assets/food-library/drink/nuoc-dua.jpg",
+    "tags": [
+      "nuoc dua",
+      "nước dừa",
+      "coconut water",
+      "drink"
+    ]
+  },
+  {
+    "id": "hanh_tay",
+    "name": "Hành tây",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/hanh-tay.jpg",
+    "tags": [
+      "hanh tay",
+      "hành tây",
+      "onion",
+      "vegetable"
+    ]
+  },
+  {
+    "id": "hanh_la",
+    "name": "Hành lá",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/hanh-la.jpg",
+    "tags": [
+      "hanh la",
+      "hành lá",
+      "scallion",
+      "green onion",
+      "vegetable"
+    ]
+  },
+  {
+    "id": "rau_muong",
+    "name": "Rau muống",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/rau-muong.jpg",
+    "tags": [
+      "rau muong",
+      "rau muống",
+      "water spinach",
+      "vegetable"
+    ]
+  },
+  {
+    "id": "toi",
+    "name": "Tỏi",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/toi.jpg",
+    "tags": [
+      "toi",
+      "tỏi",
+      "garlic",
+      "vegetable"
+    ]
+  },
+  {
+    "id": "sa",
+    "name": "Sả",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/sa.jpg",
+    "tags": [
+      "sa",
+      "sả",
+      "lemongrass",
+      "vegetable"
+    ]
+  },
+  {
+    "id": "ot",
+    "name": "Ớt",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/ot.jpg",
+    "tags": [
+      "ot",
+      "ớt",
+      "chili",
+      "vegetable"
+    ]
+  },
+  {
+    "id": "bi_do",
+    "name": "Bí đỏ",
+    "categoryKey": "vegetable",
+    "imagePath": "/assets/food-library/vegetable/bi-do.jpg",
+    "tags": [
+      "bi do",
+      "bí đỏ",
+      "pumpkin",
+      "vegetable"
+    ]
+  }
+]

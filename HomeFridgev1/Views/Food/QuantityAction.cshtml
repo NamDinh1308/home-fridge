@@ -1,0 +1,247 @@
+@model HomeFridgev1.Models.ViewModels.FoodQuantityActionViewModel
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = Model.ActionType switch
+    {
+        "Consume" => "Dùng bớt thực phẩm",
+        "Restock" => "Bổ sung thực phẩm",
+        "Discard" => "Bỏ đi thực phẩm",
+        _ => "Cập nhật số lượng"
+    };
+
+    var isConsume = Model.ActionType == "Consume";
+    var isRestock = Model.ActionType == "Restock";
+    var isDiscard = Model.ActionType == "Discard";
+    var isFromArchived = string.Equals(Model.Source, "archived", StringComparison.OrdinalIgnoreCase);
+
+    var heading = isConsume
+        ? "Dùng bớt thực phẩm"
+        : isRestock
+            ? "Bổ sung thực phẩm"
+            : isDiscard
+                ? "Bỏ đi thực phẩm"
+                : "Cập nhật số lượng";
+
+    var description = isConsume
+        ? "Ghi nhận lượng thực phẩm đã được sử dụng."
+        : isRestock
+            ? "Ghi nhận lượng thực phẩm được bổ sung thêm."
+            : isDiscard
+                ? "Ghi nhận lượng thực phẩm cần loại bỏ."
+                : "Cập nhật biến động số lượng thực phẩm.";
+
+    var buttonText = isConsume
+        ? "Xác nhận dùng bớt"
+        : isRestock
+            ? "Xác nhận bổ sung"
+            : isDiscard
+                ? "Xác nhận bỏ đi"
+                : "Xác nhận";
+
+    var accentClass = isConsume
+        ? "bg-amber-600 hover:bg-amber-700"
+        : isRestock
+            ? "bg-emerald-600 hover:bg-emerald-700"
+            : isDiscard
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-slate-800 hover:bg-slate-900";
+
+    var statusClass = Model.CurrentStatus switch
+    {
+        "Normal" => "bg-emerald-50 text-emerald-700 border border-emerald-200",
+        "Warning" => "bg-amber-50 text-amber-700 border border-amber-200",
+        "Urgent" => "bg-orange-50 text-orange-700 border border-orange-200",
+        "Expired" => "bg-red-50 text-red-700 border border-red-200",
+        "OutOfStock" => "bg-slate-100 text-slate-700 border border-slate-200",
+        _ => "bg-slate-100 text-slate-700 border border-slate-200"
+    };
+}
+
+<div class="max-w-5xl mx-auto py-8 px-4">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-slate-800">@heading</h1>
+        <p class="mt-2 text-slate-600">@description</p>
+
+        @if (isFromArchived)
+        {
+            <div class="mt-4 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-800">
+                Bạn đang thao tác trực tiếp từ <strong>Kho lưu trữ</strong>. Sau khi lưu, hệ thống sẽ đưa bạn quay lại kho lưu trữ thay vì danh sách chính.
+            </div>
+        }
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-start gap-4">
+                    @if (!string.IsNullOrWhiteSpace(Model.ImagePath))
+                    {
+                        <div class="h-24 w-24 rounded-3xl overflow-hidden border border-slate-200 bg-slate-50 shrink-0">
+                            <img src="@Model.ImagePath" alt="@Model.FoodName" class="h-full w-full object-cover" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="h-24 w-24 rounded-3xl border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+                            <span class="material-symbols-outlined text-3xl">image</span>
+                        </div>
+                    }
+
+                    <div class="min-w-0">
+                        <div class="text-sm text-slate-500">Thực phẩm đang thao tác</div>
+                        <h2 class="mt-1 text-2xl font-bold text-slate-800">@Model.FoodName</h2>
+                        <div class="mt-3 inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider @statusClass">
+                            @Model.CurrentStatus
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 gap-4">
+                    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Số lượng hiện tại</div>
+                        <div class="mt-2 text-2xl font-bold text-slate-800">
+                            @Model.CurrentQuantity.ToString("0.##") <span class="text-base text-slate-500">@Model.Unit</span>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Hạn sử dụng</div>
+                        <div class="mt-2 text-lg font-semibold text-slate-800">
+                            @Model.ExpiryDate.ToString("dd/MM/yyyy")
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Xem trước sau thao tác</div>
+                        <div id="quantityPreview" class="mt-2 text-lg font-semibold text-slate-800">
+                            Chưa nhập số lượng
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3">
+            <form asp-action="@Model.ActionType" method="post" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-5">
+                @Html.AntiForgeryToken()
+                <input asp-for="Id" type="hidden" />
+                <input asp-for="ActionType" type="hidden" />
+                <input asp-for="Source" type="hidden" />
+
+                <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm"></div>
+
+                <div>
+                    <label asp-for="Quantity" class="block text-sm font-medium text-slate-700 mb-1">
+                        Số lượng
+                    </label>
+                    <input asp-for="Quantity"
+                           id="QuantityInput"
+                           class="w-full rounded-2xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00ff95]"
+                           placeholder="Nhập số lượng..." />
+                    <p class="mt-1 text-xs text-slate-500">
+                        Đơn vị hiện tại: <strong>@Model.Unit</strong>
+                    </p>
+                    <span asp-validation-for="Quantity" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Reason" class="block text-sm font-medium text-slate-700 mb-1">
+                        Ghi chú / lý do
+                    </label>
+                    <textarea asp-for="Reason"
+                              rows="4"
+                              class="w-full rounded-2xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00ff95]"
+                              placeholder="Nhập ghi chú nếu cần..."></textarea>
+                    <span asp-validation-for="Reason" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    @if (isConsume)
+                    {
+                        <span>Hệ thống sẽ trừ số lượng bạn nhập khỏi số lượng hiện tại.</span>
+                    }
+                    else if (isRestock)
+                    {
+                        <span>Hệ thống sẽ cộng thêm số lượng bạn nhập vào số lượng hiện tại.</span>
+                    }
+                    else if (isDiscard)
+                    {
+                        <span>Hệ thống sẽ trừ số lượng bỏ đi khỏi số lượng hiện tại.</span>
+                    }
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button type="submit"
+                            class="inline-flex items-center justify-center rounded-2xl text-white px-5 py-3 font-medium transition @accentClass">
+                        @buttonText
+                    </button>
+
+                    @if (isFromArchived)
+                    {
+                        <a asp-action="Archived"
+                           class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 font-medium text-slate-700 hover:bg-slate-50 transition">
+                            Quay lại kho lưu trữ
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-action="Index"
+                           class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 font-medium text-slate-700 hover:bg-slate-50 transition">
+                            Quay lại danh sách
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const quantityInput = document.getElementById('QuantityInput');
+            const preview = document.getElementById('quantityPreview');
+            const currentQuantity = @Model.CurrentQuantity.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            const actionType = @Html.Raw(JsonSerializer.Serialize(Model.ActionType));
+            const unit = @Html.Raw(JsonSerializer.Serialize(Model.Unit));
+
+            function formatNumber(value) {
+                return value
+                    .toFixed(2)
+                    .replace(/\.00$/, '')
+                    .replace(/(\.\d*[1-9])0+$/, '$1');
+            }
+
+            function updatePreview() {
+                const raw = quantityInput.value.replace(',', '.');
+                const quantity = parseFloat(raw);
+
+                if (isNaN(quantity) || quantity <= 0) {
+                    preview.textContent = 'Chưa nhập số lượng';
+                    return;
+                }
+
+                let result = currentQuantity;
+
+                if (actionType === 'Consume' || actionType === 'Discard') {
+                    result = currentQuantity - quantity;
+
+                    if (result < 0) {
+                        preview.textContent = 'Số lượng sau thao tác không hợp lệ';
+                        return;
+                    }
+                } else if (actionType === 'Restock') {
+                    result = currentQuantity + quantity;
+                }
+
+                preview.textContent = `${formatNumber(result)} ${unit}`;
+            }
+
+            quantityInput.addEventListener('input', updatePreview);
+            updatePreview();
+        })();
+    </script>
+}

@@ -1,0 +1,28 @@
+# Tự động sinh ra bởi các công cụ build (.NET)
+[Bb]in/
+[Oo]bj/
+
+# Thư mục chứa thư viện frontend
+node_modules/
+
+# File cơ sở dữ liệu SQLite cục bộ (Không đẩy lên để tránh lộ dữ liệu hoặc ghi đè)
+*.db
+*.db-shm
+*.db-wal
+
+# Các file tạm của hệ điều hành và IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.DS_Store
+Thumbs.db
+
+# Biến môi trường local (nếu có)
+.env
+.env.local
+
+# File log
+*.log
