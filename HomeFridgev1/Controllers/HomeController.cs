@@ -253,12 +253,27 @@ namespace HomeFridgev1.Controllers
 
         [AllowAnonymous]
         [HttpGet("/Home/ResetPasswordTemp")]
-        public async Task<IActionResult> ResetPasswordTemp()
+        public async Task<IActionResult> ResetPasswordTemp(string? email)
         {
-            var user = await _userManager.FindByEmailAsync("user@homefridge.vn");
+            var targetEmail = string.IsNullOrWhiteSpace(email) ? "user@homefridge.vn" : email.Trim();
+            var user = await _userManager.FindByEmailAsync(targetEmail);
             if (user == null)
             {
-                return Content("Không tìm thấy tài khoản user@homefridge.vn!");
+                user = new IdentityUser 
+                { 
+                    UserName = targetEmail, 
+                    Email = targetEmail, 
+                    EmailConfirmed = true 
+                };
+                var createResult = await _userManager.CreateAsync(user, "Password123!");
+                if (createResult.Succeeded)
+                {
+                    return Content($"Tài khoản {targetEmail} chưa tồn tại và đã được TẠO MỚI thành công! Mật khẩu là: Password123!");
+                }
+                else
+                {
+                    return Content("Lỗi khi tạo mới tài khoản: " + string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                }
             }
 
             user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, "Password123!");
@@ -266,10 +281,18 @@ namespace HomeFridgev1.Controllers
 
             if (result.Succeeded)
             {
-                return Content("Đặt lại mật khẩu thành công! Mật khẩu mới của bạn là: Password123!");
+                return Content($"Đặt lại mật khẩu thành công cho tài khoản {targetEmail}! Mật khẩu mới là: Password123!");
             }
 
             return Content("Lỗi: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+
+        [AllowAnonymous]
+        [HttpGet("/Home/ListUsers")]
+        public async Task<IActionResult> ListUsers()
+        {
+            var users = await _context.Users.Select(u => u.Email).ToListAsync();
+            return Content("Danh sách tài khoản trong cơ sở dữ liệu: " + string.Join(", ", users));
         }
 
         public IActionResult Privacy()
