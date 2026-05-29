@@ -8,6 +8,7 @@ using HomeFridgev1.Services.Email;
 using HomeFridgev1.Services.Notification;
 using Resend;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
