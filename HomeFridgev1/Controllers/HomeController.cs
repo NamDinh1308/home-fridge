@@ -295,6 +295,46 @@ namespace HomeFridgev1.Controllers
             return Content("Danh sách tài khoản trong cơ sở dữ liệu: " + string.Join(", ", users));
         }
 
+        [Authorize]
+        [HttpGet("/Home/ResetData")]
+        public async Task<IActionResult> ResetData()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            var household = await _context.Households
+                .FirstOrDefaultAsync(h => h.OwnerUserId == user.Id);
+
+            if (household != null)
+            {
+                var foods = _context.FoodItems.Where(f => f.HouseholdId == household.Id);
+                _context.FoodItems.RemoveRange(foods);
+
+                var recipes = _context.Recipes.Where(r => r.HouseholdId == household.Id);
+                _context.Recipes.RemoveRange(recipes);
+
+                var categories = _context.Categories.Where(c => c.HouseholdId == household.Id);
+                _context.Categories.RemoveRange(categories);
+
+                var locations = _context.StorageLocations.Where(l => l.HouseholdId == household.Id);
+                _context.StorageLocations.RemoveRange(locations);
+
+                var settings = _context.HouseholdSettings.Where(s => s.HouseholdId == household.Id);
+                _context.HouseholdSettings.RemoveRange(settings);
+
+                var members = _context.MemberProfiles.Where(m => m.HouseholdId == household.Id);
+                _context.MemberProfiles.RemoveRange(members);
+
+                _context.Households.Remove(household);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Dashboard");
+        }
+
         public IActionResult Privacy()
         {
             return View();
