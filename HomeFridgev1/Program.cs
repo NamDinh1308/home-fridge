@@ -114,7 +114,7 @@ app.Run();
 #region Helper Methods
 static string ConvertPostgresUrlToConnectionString(string url)
 {
-    if (string.IsNullOrEmpty(url) || !url.StartsWith("postgres://"))
+    if (string.IsNullOrEmpty(url) || (!url.StartsWith("postgres://") && !url.StartsWith("postgresql://")))
     {
         return url;
     }
