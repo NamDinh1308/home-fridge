@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Winter Food Match — 30 Câu Hiểu Nhau</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- Winter Sky Background & Animated Snow Canvas -->
+  <div class="winter-bg" aria-hidden="true">
+    <div class="aurora aurora-1"></div>
+    <div class="aurora aurora-2"></div>
+    <div class="aurora aurora-3"></div>
+    <canvas id="snow-canvas"></canvas>
+    <canvas id="confetti-canvas"></canvas>
+  </div>
+
+  <!-- Top Navigation / Controls -->
+  <header class="topbar">
+    <div class="brand" id="brand-home" title="Về màn hình chính">
+      <span class="brand-icon">❄️</span>
+      <div class="brand-text">
+        <span class="brand-title">Winter Match</span>
+        <span class="brand-sub">30 Câu Ăn Uống & Hoa Quả</span>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <div class="room-pill hidden" id="topbar-room-pill">
+        <span>Phòng:</span>
+        <strong id="topbar-room-code">----</strong>
+      </div>
+      <button class="icon-btn" id="btn-music" type="button" title="Bật/tắt nhạc nền mùa đông">
+        <span id="music-icon">🎵</span>
+        <span class="btn-label" id="music-label">Nhạc: Tắt</span>
+      </button>
+      <button class="icon-btn" id="btn-sfx" type="button" title="Bật/tắt hiệu ứng âm thanh">
+        <span id="sfx-icon">🔊</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <!-- VIEW 1: HOME / SETUP -->
+    <section class="view active" id="view-home">
+      <div class="hero-card glass-card">
+        <div class="season-badge">❄️ Phiên bản Mùa Đông • 30 Câu Hỏi</div>
+        <h1>Tâm Giao Hay Người Lạ?</h1>
+        <p class="hero-desc">
+          20 câu ẩm thực Việt &amp; quốc tế + 10 câu hoa quả chọn lọc. Chọn nhanh <strong>A hoặc B</strong> và xem ngay hai bạn có chung gu ăn uống hay không!
+        </p>
+
+        <!-- Mode Tabs -->
+        <div class="mode-tabs" role="tablist">
+          <button class="mode-tab active" data-mode="local" type="button">
+            <span>🧣</span> Chơi chung 1 máy
+          </button>
+          <button class="mode-tab" data-mode="online" type="button">
+            <span>🌐</span> Chơi 2 máy (Phòng Online)
+          </button>
+        </div>
+
+        <!-- Local 2-Player Form -->
+        <div class="mode-panel active" id="panel-local">
+          <div class="input-grid">
+            <div class="field">
+              <label for="local-p1">Người chơi 1 ❄️</label>
+              <input id="local-p1" type="text" maxlength="20" placeholder="Ví dụ: Minh" value="Minh" />
+            </div>
+            <div class="field">
+              <label for="local-p2">Người chơi 2 🧣</label>
+              <input id="local-p2" type="text" maxlength="20" placeholder="Ví dụ: Linh" value="Linh" />
+            </div>
+          </div>
+          <p class="mode-hint">
+            ✨ Hai người lần lượt bấm chọn bí mật trên cùng màn hình — ngay khi người thứ 2 chọn xong, hệ thống sẽ lật kết quả của cả hai cùng lúc!
+          </p>
+          <button class="primary-btn" id="btn-start-local" type="button">
+            Bắt đầu chơi 30 câu →
+          </button>
+        </div>
+
+        <!-- Online 2-Device Room Form -->
+        <div class="mode-panel" id="panel-online">
+          <div class="field">
+            <label for="online-name">Tên của bạn</label>
+            <input id="online-name" type="text" maxlength="20" placeholder="Nhập tên hiển thị..." />
+          </div>
+
+          <div class="online-actions">
+            <button class="primary-btn" id="btn-create-room" type="button">
+              ❄️ Tạo phòng mới
+            </button>
+            <div class="divider-or"><span>hoặc vào phòng có sẵn</span></div>
+            <div class="join-row">
+              <input id="join-code" type="text" maxlength="4" placeholder="Mã phòng (4 ký tự)" />
+              <button class="secondary-btn" id="btn-join-room" type="button">Tham gia</button>
+            </div>
+          </div>
+          <p class="error-msg hidden" id="online-error"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: ONLINE LOBBY -->
+    <section class="view" id="view-lobby">
+      <div class="lobby-card glass-card">
+        <div class="season-badge">☃️ Phòng Chờ Trực Tuyến</div>
+        <h2>Mã phòng: <span class="room-code-big" id="lobby-code">----</span></h2>
+        <p class="lobby-sub">Gửi mã phòng hoặc đường link bên dưới cho người kia cùng vào:</p>
+
+        <div class="invite-box">
+          <input id="invite-link" type="text" readonly />
+          <button class="secondary-btn" id="btn-copy-link" type="button">Sao chép</button>
+        </div>
+
+        <div class="players-lobby">
+          <div class="player-slot filled" id="slot-p1">
+            <span class="slot-avatar">❄️</span>
+            <div class="slot-info">
+              <span class="slot-role">Chủ phòng (Người 1)</span>
+              <strong id="lobby-p1-name">...</strong>
+            </div>
+            <span class="slot-status ready">Đã sẵn sàng</span>
+          </div>
+
+          <div class="player-slot" id="slot-p2">
+            <span class="slot-avatar">🧣</span>
+            <div class="slot-info">
+              <span class="slot-role">Khách mời (Người 2)</span>
+              <strong id="lobby-p2-name">Đang chờ vào phòng...</strong>
+            </div>
+            <span class="slot-status waiting" id="lobby-p2-status">Đang chờ</span>
+          </div>
+        </div>
+
+        <div class="lobby-footer">
+          <button class="primary-btn hidden" id="btn-online-start" type="button" disabled>
+            Bắt đầu chơi 30 câu →
+          </button>
+          <p class="wait-note hidden" id="lobby-guest-note">
+            ✨ Đã kết nối! Đang chờ chủ phòng bấm Bắt đầu...
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: GAMEPLAY -->
+    <section class="view" id="view-game">
+      <div class="game-container">
+        <!-- Progress & Score Strip -->
+        <div class="hud glass-card">
+          <div class="hud-top">
+            <div class="q-meta">
+              <span class="q-badge" id="q-number">Câu 1 / 30</span>
+              <span class="cat-badge" id="q-category">Món chính</span>
+            </div>
+            <div class="match-counter">
+              <span>💖 Trùng ý:</span>
+              <strong id="hud-match-count">0</strong>
+            </div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- Question & Players Status Banner -->
+        <div class="question-card glass-card" id="question-card">
+          <div class="turn-banner" id="turn-banner">
+            <div class="player-chip" id="chip-p1">
+              <span class="chip-dot">❄️</span>
+              <span class="chip-name" id="chip-p1-name">Minh</span>
+              <span class="chip-state" id="chip-p1-state">Đang chọn...</span>
+            </div>
+            <div class="turn-center-status" id="turn-center-status">Hãy chọn A hoặc B</div>
+            <div class="player-chip" id="chip-p2">
+              <span class="chip-dot">🧣</span>
+              <span class="chip-name" id="chip-p2-name">Linh</span>
+              <span class="chip-state" id="chip-p2-state">Chờ lượt</span>
+            </div>
+          </div>
+
+          <h2 class="question-text" id="question-text">Đang tải câu hỏi...</h2>
+
+          <!-- Split-Screen Image Stage with Instant Reveal Overlays -->
+          <div class="image-stage" id="image-stage">
+            <img id="question-image" src="" alt="Hình minh họa câu hỏi" />
+            <div class="image-overlay left" id="img-overlay-a">
+              <div class="overlay-badges" id="img-badges-a"></div>
+            </div>
+            <div class="image-overlay right" id="img-overlay-b">
+              <div class="overlay-badges" id="img-badges-b"></div>
+            </div>
+            <div class="center-vs" id="center-vs">VS</div>
+          </div>
+
+          <!-- Reveal Banner (pops in smoothly after both choose) -->
+          <div class="reveal-banner hidden" id="reveal-banner">
+            <div class="reveal-pill" id="reveal-pill">✨ Trùng ý rồi!</div>
+            <p class="reveal-detail" id="reveal-detail"></p>
+          </div>
+
+          <!-- Two Option Cards -->
+          <div class="options-grid" id="options-grid">
+            <button class="option-card option-a" id="btn-opt-a" type="button" data-choice="A">
+              <div class="option-head">
+                <span class="option-letter">A</span>
+                <div class="choice-players" id="players-on-a"></div>
+              </div>
+              <div class="option-label" id="label-opt-a">Đáp án A</div>
+              <span class="option-hint">Bên trái</span>
+            </button>
+
+            <button class="option-card option-b" id="btn-opt-b" type="button" data-choice="B">
+              <div class="option-head">
+                <span class="option-letter">B</span>
+                <div class="choice-players" id="players-on-b"></div>
+              </div>
+              <div class="option-label" id="label-opt-b">Đáp án B</div>
+              <span class="option-hint">Bên phải</span>
+            </button>
+          </div>
+
+          <!-- Next Button -->
+          <div class="next-row hidden" id="next-row">
+            <button class="primary-btn next-btn" id="btn-next" type="button">
+              Câu tiếp theo →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: SUMMARY -->
+    <section class="view" id="view-summary">
+      <div class="summary-card glass-card">
+        <div class="season-badge">❄️ Kết Quả Tổng Kết • 30 Câu</div>
+        <h2 id="summary-title">Độ Hiểu Nhau Của Hai Bạn</h2>
+
+        <div class="score-hero">
+          <div class="ring-wrap">
+            <svg class="score-ring" viewBox="0 0 140 140">
+              <circle class="ring-bg" cx="70" cy="70" r="58"></circle>
+              <circle class="ring-fg" id="score-ring-fg" cx="70" cy="70" r="58"></circle>
+            </svg>
+            <div class="ring-center">
+              <strong id="summary-percent">0%</strong>
+              <span id="summary-fraction">0 / 30</span>
+            </div>
+          </div>
+          <div class="score-verdict">
+            <div class="verdict-badge" id="verdict-badge">Tri Kỷ Mùa Đông</div>
+            <p id="verdict-desc">Hai bạn có rất nhiều điểm chung trong ăn uống!</p>
+            <div class="summary-actions">
+              <button class="primary-btn" id="btn-replay" type="button">Chơi lại từ đầu</button>
+              <button class="secondary-btn" id="btn-back-home" type="button">Về trang chủ</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <button class="filter-btn active" data-filter="all" type="button">Tất cả (30)</button>
+          <button class="filter-btn" data-filter="match" type="button" id="filter-match-btn">Trùng ý (0)</button>
+          <button class="filter-btn" data-filter="diff" type="button" id="filter-diff-btn">Khác biệt (0)</button>
+        </div>
+
+        <div class="review-list" id="review-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/questions.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
+

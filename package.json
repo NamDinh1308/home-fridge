@@ -1,17 +1,13 @@
 {
-  "name": "homefridgev1",
+  "name": "winter-food-match",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "30-question Winter Food & Fruit 2-player matching quiz",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "@tailwindcss/cli": "^4.2.2",
-    "tailwindcss": "^4.2.2"
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
+
