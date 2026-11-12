@@ -1,4 +1,4 @@
-window.QUIZ_QUESTIONS = [
+const FOOD_FRUIT_QUESTIONS = [
   // === PHẦN 1: 20 CÂU ĂN UỐNG ===
   {
     id: 1,
@@ -160,8 +160,6 @@ window.QUIZ_QUESTIONS = [
     optionB: "Nho / Dâu tây",
     image: "/images/cau_20.jpg",
   },
-
-  // === PHẦN 2: 10 CÂU HOA QUẢ (MỖI ĐÁP ÁN 1 LỰA CHỌN) ===
   {
     id: 21,
     category: "Hoa quả",
@@ -244,3 +242,186 @@ window.QUIZ_QUESTIONS = [
   },
 ];
 
+const TRAVEL_PLACES_QUESTIONS = [
+  {
+    id: 1,
+    category: "Du lịch VN",
+    text: "Điểm du lịch nổi tiếng trong nước mà bạn thích đi hơn?",
+    optionA: "Đà Lạt (se lạnh, sương mù)",
+    optionB: "Phú Quốc / Nha Trang (biển xanh, nắng ấm)",
+    image: "/images/cau_21.jpg",
+  },
+  {
+    id: 2,
+    category: "Du lịch VN",
+    text: "Nếu ra miền Bắc du lịch, bạn muốn đến đâu hơn?",
+    optionA: "Sa Pa / Hà Giang (núi non hùng vĩ)",
+    optionB: "Hạ Long / Ninh Bình (vịnh biển, hang động)",
+    image: "/images/cau_22.jpg",
+  },
+  {
+    id: 3,
+    category: "Du lịch VN",
+    text: "Thành phố miền Trung nào thu hút bạn hơn?",
+    optionA: "Đà Nẵng – Hội An",
+    optionB: "Huế mộng mơ",
+    image: "/images/cau_23.jpg",
+  },
+  {
+    id: 4,
+    category: "Quốc tế",
+    text: "Nếu đi du lịch châu Á, bạn chọn điểm đến nào?",
+    optionA: "Nhật Bản / Hàn Quốc",
+    optionB: "Thái Lan / Singapore",
+    image: "/images/cau_24.jpg",
+  },
+  {
+    id: 5,
+    category: "Quốc tế",
+    text: "Nếu có dịp đi xa xuyên lục địa, bạn mơ ước đến đâu?",
+    optionA: "Châu Âu cổ kính (Pháp, Ý, Thụy Sĩ...)",
+    optionB: "Mỹ hoặc Úc hiện đại",
+    image: "/images/cau_25.jpg",
+  },
+  {
+    id: 6,
+    category: "Lưu trú",
+    text: "Khi đi du lịch, bạn thích chọn kiểu nơi ở nào?",
+    optionA: "Resort / Khách sạn đầy đủ tiện nghi",
+    optionB: "Homestay xinh xắn, gần gũi thiên nhiên",
+    image: "/images/cau_26.jpg",
+  },
+  {
+    id: 7,
+    category: "Di chuyển",
+    text: "Phương tiện di chuyển đường dài mà bạn thích hơn?",
+    optionA: "Đi máy bay cho nhanh gọn",
+    optionB: "Đi tàu hỏa / Xe tự lái để ngắm cảnh",
+    image: "/images/cau_27.jpg",
+  },
+  {
+    id: 8,
+    category: "Buổi tối",
+    text: "Buổi tối khi đi du lịch, bạn thích đi đâu hơn?",
+    optionA: "Dạo chợ đêm, ăn uống sầm uất",
+    optionB: "Ngồi quán cà phê acoustic / bar nhẹ nhàng",
+    image: "/images/cau_28.jpg",
+  },
+  {
+    id: 9,
+    category: "Hoạt động",
+    text: "Hoạt động ngoài trời nào khiến bạn hào hứng hơn?",
+    optionA: "Tắm biển, lặn ngắm san hô, chèo SUP",
+    optionB: "Trekking leo núi, cắm trại trong rừng",
+    image: "/images/cau_29.jpg",
+  },
+  {
+    id: 10,
+    category: "Cuối tuần",
+    text: "Cuối tuần đi chơi quanh thành phố, bạn thích đến đâu?",
+    optionA: "Trung tâm thương mại / Rạp chiếu phim",
+    optionB: "Công viên / Đường sách / Phố đi bộ",
+    image: "/images/cau_30.jpg",
+  },
+  {
+    id: 11,
+    category: "Quán cà phê",
+    text: "Chọn quán cà phê để ngồi lâu hoặc hẹn hò, bạn thích?",
+    optionA: "Quán sân vườn thoáng mát, nhiều cây xanh",
+    optionB: "Quán máy lạnh hiện đại, thiết kế tối giản",
+    image: "/images/cau_31.jpg",
+  },
+  {
+    id: 12,
+    category: "Hẹn hò",
+    text: "Địa điểm hẹn hò buổi tối lãng mạn, bạn nghiêng về?",
+    optionA: "Rooftop ngắm toàn cảnh thành phố trên cao",
+    optionB: "Quán ăn nhỏ ấm cúng trong con hẻm yên tĩnh",
+    image: "/images/cau_32.jpg",
+  },
+  {
+    id: 13,
+    category: "Thời tiết",
+    text: "Mùa nào trong năm bạn thích xách vali đi du lịch nhất?",
+    optionA: "Mùa hè nắng đẹp rực rỡ",
+    optionB: "Mùa thu / mùa đông se lạnh",
+    image: "/images/cau_33.jpg",
+  },
+  {
+    id: 14,
+    category: "Khám phá",
+    text: "Khi đến một thành phố mới, bạn muốn ghé thăm đâu trước?",
+    optionA: "Bảo tàng, di tích lịch sử, khu phố cổ",
+    optionB: "Công viên giải trí, khu vui chơi cảm giác mạnh",
+    image: "/images/cau_34.jpg",
+  },
+  {
+    id: 15,
+    category: "Lịch trình",
+    text: "Đi chơi xa cùng nhau, bạn thích kiểu lịch trình nào?",
+    optionA: "Lên lịch trình rõ ràng từng điểm trước khi đi",
+    optionB: "Đi tự do tùy hứng, thích đâu ghé đó",
+    image: "/images/cau_35.jpg",
+  },
+  {
+    id: 16,
+    category: "Thiên nhiên",
+    text: "Khung cảnh thiên nhiên nào làm bạn thấy thư giãn nhất?",
+    optionA: "Ngắm hoàng hôn / bình minh trên biển",
+    optionB: "Săn mây trên đỉnh núi vào sáng sớm",
+    image: "/images/cau_36.jpg",
+  },
+  {
+    id: 17,
+    category: "Nghỉ dưỡng",
+    text: "Nghỉ dưỡng ngắn ngày (2 ngày 1 đêm) gần thành phố, bạn chọn?",
+    optionA: "Khu cắm trại (Glamping) ngoài trời",
+    optionB: "Villa / Biệt thự có hồ bơi riêng",
+    image: "/images/cau_37.jpg",
+  },
+  {
+    id: 18,
+    category: "Trải nghiệm",
+    text: "Khi du lịch ở vùng đất mới, bạn thích trải nghiệm kiểu nào?",
+    optionA: "Lang thang khu phố địa phương, ăn quán lề đường",
+    optionB: "Ghé các địa danh nổi tiếng để check-in",
+    image: "/images/cau_38.jpg",
+  },
+  {
+    id: 19,
+    category: "Ngày nghỉ",
+    text: "Trong một ngày nghỉ hoàn toàn tại nơi mình sống, bạn thích ở đâu?",
+    optionA: "Ở nhà trong phòng riêng cả ngày",
+    optionB: "Ra quán cà phê quen ngồi đọc sách / thư giãn",
+    image: "/images/cau_39.jpg",
+  },
+  {
+    id: 20,
+    category: "Kỷ niệm",
+    text: "Chuyến đi kỷ niệm lý tưởng của hai người theo ý bạn là?",
+    optionA: "Chuyến đi phượt xe máy nhiều trải nghiệm bụi bặm",
+    optionB: "Kỳ nghỉ dưỡng sang chảnh, nhẹ nhàng để tận hưởng",
+    image: "/images/cau_40.jpg",
+  },
+];
+
+window.QUIZ_DECKS = [
+  {
+    id: "food-fruit-30",
+    title: "Ăn Uống & Hoa Quả",
+    icon: "🍜",
+    description: "20 câu ẩm thực + 10 câu hoa quả",
+    builtIn: true,
+    questions: FOOD_FRUIT_QUESTIONS,
+  },
+  {
+    id: "travel-places-20",
+    title: "Địa Điểm & Du Lịch",
+    icon: "✈️",
+    description: "20 câu gu du lịch & địa điểm hẹn hò",
+    builtIn: true,
+    questions: TRAVEL_PLACES_QUESTIONS,
+  },
+];
+
+window.QUIZ_QUESTIONS = FOOD_FRUIT_QUESTIONS;

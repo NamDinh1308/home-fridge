@@ -6,7 +6,6 @@ const { URL } = require("url");
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, "public");
 const IMAGES_DIR = path.join(__dirname, "kahoot_images");
-const TOTAL_QUESTIONS = 30;
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -46,7 +45,7 @@ function readJsonBody(req) {
     let raw = "";
     req.on("data", (chunk) => {
       raw += chunk;
-      if (raw.length > 64 * 1024) {
+      if (raw.length > 8 * 1024 * 1024) {
         reject(new Error("Payload too large"));
         req.destroy();
       }
@@ -71,7 +70,10 @@ function serializeRoomFor(room, viewerId) {
     code: room.code,
     phase: room.phase,
     currentIndex: idx,
-    totalQuestions: TOTAL_QUESTIONS,
+    totalQuestions: room.questions.length,
+    deckTitle: room.deckTitle,
+    deckIcon: room.deckIcon,
+    questions: room.questions,
     players: {
       p1: room.players.p1 ? { name: room.players.p1.name } : null,
       p2: room.players.p2 ? { name: room.players.p2.name } : null,
@@ -104,8 +106,20 @@ function broadcastRoom(room) {
   }
 }
 
-function createEmptyAnswers() {
-  return Array.from({ length: TOTAL_QUESTIONS }, () => ({ p1: null, p2: null }));
+function createEmptyAnswers(count) {
+  return Array.from({ length: count }, () => ({ p1: null, p2: null }));
+}
+
+function sanitizeQuestions(rawQuestions) {
+  if (!Array.isArray(rawQuestions) || rawQuestions.length === 0) return [];
+  return rawQuestions.slice(0, 100).map((q, idx) => ({
+    id: idx + 1,
+    category: String(q.category || "Chủ đề").trim().slice(0, 30) || "Chủ đề",
+    text: String(q.text || `Câu ${idx + 1}`).trim().slice(0, 240),
+    optionA: String(q.optionA || "Lựa chọn A").trim().slice(0, 120),
+    optionB: String(q.optionB || "Lựa chọn B").trim().slice(0, 120),
+    image: typeof q.image === "string" ? q.image.trim() : "",
+  }));
 }
 
 function serveStaticFile(req, res, baseDir, relPath) {
@@ -176,13 +190,22 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await readJsonBody(req);
       const name = String(body.playerName || "Người chơi 1").trim().slice(0, 24) || "Người chơi 1";
+      const questions = sanitizeQuestions(body.questions);
+      if (questions.length === 0) {
+        return sendJson(res, 400, { error: "Bộ câu hỏi không hợp lệ hoặc chưa có câu nào!" });
+      }
+      const deckTitle = String(body.deckTitle || "Bộ câu hỏi").trim().slice(0, 60) || "Bộ câu hỏi";
+      const deckIcon = String(body.deckIcon || "❄️").trim().slice(0, 8) || "❄️";
       const code = generateRoomCode();
       const room = {
         code,
         phase: "lobby",
         currentIndex: 0,
+        deckTitle,
+        deckIcon,
+        questions,
         players: { p1: { name }, p2: null },
-        answers: createEmptyAnswers(),
+        answers: createEmptyAnswers(questions.length),
         clients: new Set(),
         updatedAt: Date.now(),
       };
@@ -252,7 +275,7 @@ const server = http.createServer(async (req, res) => {
         }
         room.phase = "question";
         room.currentIndex = 0;
-        room.answers = createEmptyAnswers();
+        room.answers = createEmptyAnswers(room.questions.length);
         broadcastRoom(room);
         return sendJson(res, 200, { ok: true });
       }
@@ -276,7 +299,7 @@ const server = http.createServer(async (req, res) => {
         if (room.phase !== "reveal") {
           return sendJson(res, 400, { error: "Chưa mở kết quả câu hiện tại" });
         }
-        if (room.currentIndex + 1 >= TOTAL_QUESTIONS) {
+        if (room.currentIndex + 1 >= room.questions.length) {
           room.phase = "summary";
         } else {
           room.currentIndex += 1;
@@ -289,7 +312,7 @@ const server = http.createServer(async (req, res) => {
       if (action === "restart" && req.method === "POST") {
         room.phase = "question";
         room.currentIndex = 0;
-        room.answers = createEmptyAnswers();
+        room.answers = createEmptyAnswers(room.questions.length);
         broadcastRoom(room);
         return sendJson(res, 200, { ok: true });
       }

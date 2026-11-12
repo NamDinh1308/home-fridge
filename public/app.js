@@ -1,12 +1,23 @@
 (() => {
-  const QUESTIONS = window.QUIZ_QUESTIONS || [];
-  const TOTAL = QUESTIONS.length;
+  const BUILT_IN_DECKS = window.QUIZ_DECKS || [
+    {
+      id: "food-fruit-30",
+      title: "Ăn Uống & Hoa Quả",
+      icon: "🍜",
+      description: "20 câu ẩm thực + 10 câu hoa quả",
+      builtIn: true,
+      questions: window.QUIZ_QUESTIONS || [],
+    },
+  ];
+  const STORAGE_CUSTOM_KEY = "winterMatch_customDecks_v1";
+  const STORAGE_SELECTED_KEY = "winterMatch_selectedDeckId_v1";
 
   // === DOM HELPERS ===
   const $ = (id) => document.getElementById(id);
 
   const views = {
     home: $("view-home"),
+    builder: $("view-builder"),
     lobby: $("view-lobby"),
     game: $("view-game"),
     summary: $("view-summary"),
@@ -22,6 +33,10 @@
   const state = {
     sfxEnabled: true,
     musicEnabled: false,
+    selectedDeckId: localStorage.getItem(STORAGE_SELECTED_KEY) || BUILT_IN_DECKS[0].id,
+    activeQuestions: BUILT_IN_DECKS[0].questions,
+    activeDeckTitle: BUILT_IN_DECKS[0].title,
+    activeDeckIcon: BUILT_IN_DECKS[0].icon,
 
     // Online mode state
     online: {
@@ -30,6 +45,11 @@
       eventSource: null,
       lastPhaseKey: "",
       roomState: null,
+    },
+
+    builder: {
+      editingId: null,
+      questions: [],
     },
 
     reviewFilter: "all",
@@ -397,7 +417,9 @@
     matchesSoFar,
     isNewQuestion,
   }) {
-    const q = QUESTIONS[index];
+    const questions = state.activeQuestions;
+    const total = questions.length || 1;
+    const q = questions[index];
     if (!q) return;
 
     if (isNewQuestion) {
@@ -406,16 +428,16 @@
       void card.offsetWidth;
       card.classList.add("entering");
       // Preload next image smoothly
-      if (QUESTIONS[index + 1]) {
+      if (questions[index + 1] && questions[index + 1].image) {
         const preload = new Image();
-        preload.src = QUESTIONS[index + 1].image;
+        preload.src = questions[index + 1].image;
       }
     }
 
-    $("q-number").textContent = `Câu ${index + 1} / ${TOTAL}`;
-    $("q-category").textContent = q.category;
+    $("q-number").textContent = `Câu ${index + 1} / ${total}`;
+    $("q-category").textContent = q.category || "Chủ đề";
     $("hud-match-count").textContent = String(matchesSoFar);
-    $("progress-fill").style.width = `${((index + 1) / TOTAL) * 100}%`;
+    $("progress-fill").style.width = `${((index + 1) / total) * 100}%`;
 
     $("chip-p1-name").textContent = p1Name;
     $("chip-p2-name").textContent = p2Name;
@@ -440,7 +462,14 @@
 
     $("turn-center-status").textContent = centerHint;
     $("question-text").textContent = q.text;
-    $("question-image").src = q.image;
+    const imgStage = $("image-stage");
+    if (q.image) {
+      imgStage.classList.remove("no-image");
+      $("question-image").src = q.image;
+    } else {
+      imgStage.classList.add("no-image");
+      $("question-image").removeAttribute("src");
+    }
     $("label-opt-a").textContent = q.optionA;
     $("label-opt-b").textContent = q.optionB;
 
@@ -520,7 +549,7 @@
         : `${p1Name} chọn "${p1OptText}" • ${p2Name} chọn "${p2OptText}"`;
 
       $("next-row").classList.remove("hidden");
-      $("btn-next").textContent = index + 1 >= TOTAL ? "Xem kết quả tổng kết →" : "Câu tiếp theo →";
+      $("btn-next").textContent = index + 1 >= total ? "Xem kết quả tổng kết →" : "Câu tiếp theo →";
     }
   }
 
@@ -530,15 +559,17 @@
     playSound("victory");
     burstSnowConfetti(60);
 
-    const matches = countMatches(answers, TOTAL);
-    const pct = Math.round((matches / TOTAL) * 100);
+    const total = state.activeQuestions.length || 1;
+    const matches = countMatches(answers, total);
+    const pct = Math.round((matches / total) * 100);
 
+    $("summary-badge").textContent = `${state.activeDeckIcon} ${state.activeDeckTitle} • ${total} Câu`;
     $("summary-title").textContent = `${p1Name} & ${p2Name} — Độ Hiểu Nhau`;
     $("summary-percent").textContent = `${pct}%`;
-    $("summary-fraction").textContent = `${matches} / ${TOTAL} câu`;
+    $("summary-fraction").textContent = `${matches} / ${total} câu`;
 
     const circumference = 2 * Math.PI * 58; // ~364.4
-    const offset = circumference * (1 - matches / TOTAL);
+    const offset = circumference * (1 - matches / total);
     const ring = $("score-ring-fg");
     ring.style.strokeDashoffset = String(circumference);
     requestAnimationFrame(() => {
@@ -546,22 +577,23 @@
     });
 
     let badge = "Tri Kỷ Mùa Đông ❄️💖";
-    let desc = "Hai bạn hợp gu đến bất ngờ — đi ăn chung hay chọn trái cây chắc chắn không bao giờ cãi nhau!";
+    let desc = "Hai bạn hợp gu đến bất ngờ — đồng điệu từ suy nghĩ đến sở thích!";
     if (pct < 45) {
       badge = "Khác Biệt Thú Vị ☕";
-      desc = "Mỗi người một gu riêng biệt! Đi ăn chung tha hồ gọi được gấp đôi món ngon không lo đụng hàng.";
+      desc = "Mỗi người một gu riêng biệt! Nhưng chính sự khác biệt lại giúp cả hai khám phá thêm nhiều điều mới.";
     } else if (pct < 65) {
       badge = "Bù Trừ Hoàn Hảo 🧣";
-      desc = "Có những món hợp rơ nhưng vẫn đủ nét riêng để hai bạn khám phá thêm sở thích của nhau!";
+      desc = "Có những điểm hợp rơ nhưng vẫn đủ nét riêng để hai bạn khám phá thêm sở thích của nhau!";
     } else if (pct < 85) {
       badge = "Hợp Gu Đáng Gờm ✨";
-      desc = "Hai bạn có rất nhiều điểm chung từ món chính tới hoa quả tráng miệng!";
+      desc = "Hai bạn có rất nhiều điểm chung đáng ngưỡng mộ!";
     }
     $("verdict-badge").textContent = badge;
     $("verdict-desc").textContent = desc;
 
+    $("filter-all-btn").textContent = `Tất cả (${total})`;
     $("filter-match-btn").textContent = `Trùng ý (${matches})`;
-    $("filter-diff-btn").textContent = `Khác biệt (${TOTAL - matches})`;
+    $("filter-diff-btn").textContent = `Khác biệt (${total - matches})`;
 
     state.summaryData = { p1Name, p2Name, answers };
     renderReviewList();
@@ -573,7 +605,7 @@
     const list = $("review-list");
     list.innerHTML = "";
 
-    QUESTIONS.forEach((q, idx) => {
+    state.activeQuestions.forEach((q, idx) => {
       const ans = answers[idx] || {};
       const isMatch = ans.p1 && ans.p2 && ans.p1 === ans.p2;
       if (state.reviewFilter === "match" && !isMatch) return;
@@ -582,12 +614,16 @@
       const p1Text = ans.p1 === "A" ? q.optionA : ans.p1 === "B" ? q.optionB : "—";
       const p2Text = ans.p2 === "A" ? q.optionA : ans.p2 === "B" ? q.optionB : "—";
 
+      const thumbHtml = q.image
+        ? `<img class="review-thumb" src="${escapeHtml(q.image)}" alt="Câu ${idx + 1}" loading="lazy" />`
+        : `<div class="review-thumb-placeholder">❄️</div>`;
+
       const row = document.createElement("div");
       row.className = "review-item";
       row.innerHTML = `
-        <img class="review-thumb" src="${q.image}" alt="Câu ${idx + 1}" loading="lazy" />
+        ${thumbHtml}
         <div class="review-body">
-          <div class="review-q">Câu ${idx + 1}. ${q.text}</div>
+          <div class="review-q">Câu ${idx + 1}. ${escapeHtml(q.text)}</div>
           <div class="review-picks">
             <span class="pick-tag">❄️ <strong>${escapeHtml(p1Name)}:</strong> ${escapeHtml(p1Text)}</span>
             <span class="pick-tag">🧣 <strong>${escapeHtml(p2Name)}:</strong> ${escapeHtml(p2Text)}</span>
@@ -613,6 +649,388 @@
       document.querySelectorAll(".filter-btn").forEach((b) => b.classList.toggle("active", b === btn));
       renderReviewList();
     });
+  });
+
+  // === DECK LIBRARY & CUSTOM DECK BUILDER ===
+  function getCustomDecks() {
+    try {
+      const raw = localStorage.getItem(STORAGE_CUSTOM_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveCustomDecks(decks) {
+    localStorage.setItem(STORAGE_CUSTOM_KEY, JSON.stringify(decks));
+  }
+
+  function getAllDecks() {
+    return [...BUILT_IN_DECKS, ...getCustomDecks()];
+  }
+
+  function getSelectedDeck() {
+    const all = getAllDecks();
+    return all.find((d) => d.id === state.selectedDeckId) || all[0];
+  }
+
+  function selectDeck(deckId) {
+    state.selectedDeckId = deckId;
+    localStorage.setItem(STORAGE_SELECTED_KEY, deckId);
+    renderDeckList();
+  }
+
+  function exportDeckJson(deck) {
+    const payload = {
+      title: deck.title,
+      icon: deck.icon || "✨",
+      description: deck.description || "",
+      questions: deck.questions,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(deck.title || "bo-cau-hoi").replace(/[^a-zA-Z0-9_-]+/g, "_")}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function renderDeckList() {
+    const container = $("deck-list");
+    container.innerHTML = "";
+    const all = getAllDecks();
+    const current = getSelectedDeck();
+    if (current && current.id !== state.selectedDeckId) {
+      state.selectedDeckId = current.id;
+    }
+
+    all.forEach((deck) => {
+      const card = document.createElement("div");
+      card.className = `deck-card ${deck.id === state.selectedDeckId ? "selected" : ""}`;
+      card.setAttribute("role", "button");
+      card.tabIndex = 0;
+
+      const count = (deck.questions || []).length;
+      const badgeText = deck.builtIn ? "Có sẵn" : "Tự tạo";
+
+      const top = document.createElement("div");
+      top.className = "deck-card-top";
+      top.innerHTML = `<span class="deck-title"><span>${escapeHtml(deck.icon || "❄️")}</span><span>${escapeHtml(deck.title)}</span></span>`;
+
+      if (!deck.builtIn) {
+        const actions = document.createElement("div");
+        actions.className = "deck-card-actions";
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "deck-icon-action";
+        editBtn.title = "Sửa bộ câu hỏi";
+        editBtn.textContent = "✏️";
+        editBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openBuilderForDeck(deck);
+        });
+
+        const expBtn = document.createElement("button");
+        expBtn.type = "button";
+        expBtn.className = "deck-icon-action";
+        expBtn.title = "Xuất file JSON";
+        expBtn.textContent = "📤";
+        expBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          exportDeckJson(deck);
+        });
+
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "deck-icon-action delete";
+        delBtn.title = "Xóa bộ câu hỏi";
+        delBtn.textContent = "🗑️";
+        delBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const next = getCustomDecks().filter((d) => d.id !== deck.id);
+          saveCustomDecks(next);
+          if (state.selectedDeckId === deck.id) {
+            state.selectedDeckId = BUILT_IN_DECKS[0].id;
+            localStorage.setItem(STORAGE_SELECTED_KEY, state.selectedDeckId);
+          }
+          renderDeckList();
+        });
+
+        actions.append(editBtn, expBtn, delBtn);
+        top.appendChild(actions);
+      }
+
+      const meta = document.createElement("div");
+      meta.className = "deck-meta";
+      meta.textContent = `${count} câu • ${badgeText}${deck.description ? ` — ${deck.description}` : ""}`;
+
+      card.append(top, meta);
+      card.addEventListener("click", () => selectDeck(deck.id));
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectDeck(deck.id);
+        }
+      });
+      container.appendChild(card);
+    });
+  }
+
+  function compressImageFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const maxW = 800;
+          const maxH = 450;
+          const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+          const cw = Math.round(img.width * scale);
+          const ch = Math.round(img.height * scale);
+          const canvas = document.createElement("canvas");
+          canvas.width = cw;
+          canvas.height = ch;
+          canvas.getContext("2d").drawImage(img, 0, 0, cw, ch);
+          resolve(canvas.toDataURL("image/jpeg", 0.78));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function createEmptyQuestionItem() {
+    return { category: "Tự chọn", text: "", optionA: "", optionB: "", image: "" };
+  }
+
+  function openBuilderForDeck(deck = null) {
+    $("builder-error").classList.add("hidden");
+    if (deck) {
+      state.builder.editingId = deck.id;
+      $("builder-heading").textContent = "✏️ Chỉnh Sửa Bộ Câu Hỏi";
+      $("builder-icon").value = deck.icon || "✨";
+      $("builder-title").value = deck.title || "";
+      $("builder-desc").value = deck.description || "";
+      state.builder.questions = (deck.questions || []).map((q) => ({ ...q }));
+    } else {
+      state.builder.editingId = null;
+      $("builder-heading").textContent = "✨ Tạo Bộ Câu Hỏi Mới";
+      $("builder-icon").value = "🥑";
+      $("builder-title").value = "";
+      $("builder-desc").value = "";
+      state.builder.questions = [createEmptyQuestionItem(), createEmptyQuestionItem()];
+    }
+    renderBuilderQuestions();
+    showView("builder");
+  }
+
+  function renderBuilderQuestions() {
+    const list = $("builder-questions");
+    list.innerHTML = "";
+    state.builder.questions.forEach((q, idx) => {
+      const item = document.createElement("div");
+      item.className = "builder-q-item";
+
+      const head = document.createElement("div");
+      head.className = "builder-q-head";
+      head.innerHTML = `<strong>Câu ${idx + 1}</strong>`;
+      if (state.builder.questions.length > 1) {
+        const rm = document.createElement("button");
+        rm.type = "button";
+        rm.className = "mini-btn";
+        rm.textContent = "Xóa câu";
+        rm.addEventListener("click", () => {
+          state.builder.questions.splice(idx, 1);
+          renderBuilderQuestions();
+        });
+        head.appendChild(rm);
+      }
+
+      const qInput = document.createElement("input");
+      qInput.type = "text";
+      qInput.placeholder = "Nhập nội dung câu hỏi...";
+      qInput.value = q.text || "";
+      qInput.addEventListener("input", (e) => {
+        q.text = e.target.value;
+      });
+
+      const abRow = document.createElement("div");
+      abRow.className = "builder-q-row";
+
+      const aInput = document.createElement("input");
+      aInput.type = "text";
+      aInput.placeholder = "Đáp án A...";
+      aInput.value = q.optionA || "";
+      aInput.addEventListener("input", (e) => {
+        q.optionA = e.target.value;
+      });
+
+      const bInput = document.createElement("input");
+      bInput.type = "text";
+      bInput.placeholder = "Đáp án B...";
+      bInput.value = q.optionB || "";
+      bInput.addEventListener("input", (e) => {
+        q.optionB = e.target.value;
+      });
+      abRow.append(aInput, bInput);
+
+      const imgRow = document.createElement("div");
+      imgRow.className = "builder-img-row";
+
+      const imgUrlInput = document.createElement("input");
+      imgUrlInput.type = "text";
+      imgUrlInput.placeholder = "Link ảnh (tùy chọn, hoặc bấm Chọn ảnh từ máy)";
+      imgUrlInput.value = q.image && !q.image.startsWith("data:") ? q.image : "";
+      imgUrlInput.addEventListener("input", (e) => {
+        q.image = e.target.value.trim();
+        renderBuilderQuestions();
+      });
+
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.className = "hidden";
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          q.image = await compressImageFile(file);
+          renderBuilderQuestions();
+        } catch {
+          alert("Không đọc được file ảnh này!");
+        }
+      });
+
+      const pickImgBtn = document.createElement("button");
+      pickImgBtn.type = "button";
+      pickImgBtn.className = "mini-btn";
+      pickImgBtn.textContent = "📷 Chọn ảnh";
+      pickImgBtn.addEventListener("click", () => fileInput.click());
+
+      imgRow.append(imgUrlInput, pickImgBtn, fileInput);
+      if (q.image) {
+        const thumb = document.createElement("img");
+        thumb.className = "builder-thumb-preview";
+        thumb.src = q.image;
+        const clearImg = document.createElement("button");
+        clearImg.type = "button";
+        clearImg.className = "mini-btn";
+        clearImg.textContent = "Bỏ ảnh";
+        clearImg.addEventListener("click", () => {
+          q.image = "";
+          renderBuilderQuestions();
+        });
+        imgRow.append(thumb, clearImg);
+      }
+
+      item.append(head, qInput, abRow, imgRow);
+      list.appendChild(item);
+    });
+  }
+
+  $("btn-open-builder").addEventListener("click", () => openBuilderForDeck(null));
+  $("btn-builder-back").addEventListener("click", () => showView("home"));
+  $("btn-add-question").addEventListener("click", () => {
+    state.builder.questions.push(createEmptyQuestionItem());
+    renderBuilderQuestions();
+  });
+
+  $("btn-save-deck").addEventListener("click", () => {
+    const errEl = $("builder-error");
+    errEl.classList.add("hidden");
+
+    const title = $("builder-title").value.trim();
+    const icon = $("builder-icon").value.trim() || "✨";
+    const description = $("builder-desc").value.trim();
+
+    if (!title) {
+      errEl.textContent = "Bạn nhập tên cho bộ câu hỏi nhé!";
+      return errEl.classList.remove("hidden");
+    }
+
+    const validQuestions = state.builder.questions
+      .filter((q) => q.text.trim() && q.optionA.trim() && q.optionB.trim())
+      .map((q, i) => ({
+        id: i + 1,
+        category: q.category || "Chủ đề",
+        text: q.text.trim(),
+        optionA: q.optionA.trim(),
+        optionB: q.optionB.trim(),
+        image: q.image || "",
+      }));
+
+    if (validQuestions.length === 0) {
+      errEl.textContent = "Cần ít nhất 1 câu hỏi có đủ nội dung và 2 đáp án A, B!";
+      return errEl.classList.remove("hidden");
+    }
+
+    const custom = getCustomDecks();
+    const deckId = state.builder.editingId || `custom-${Date.now()}`;
+    const newDeck = {
+      id: deckId,
+      title,
+      icon,
+      description,
+      builtIn: false,
+      questions: validQuestions,
+    };
+
+    const existingIdx = custom.findIndex((d) => d.id === deckId);
+    if (existingIdx >= 0) {
+      custom[existingIdx] = newDeck;
+    } else {
+      custom.push(newDeck);
+    }
+
+    try {
+      saveCustomDecks(custom);
+      selectDeck(deckId);
+      showView("home");
+    } catch {
+      errEl.textContent = "Dung lượng ảnh quá lớn vượt mức lưu trình duyệt — hãy giảm bớt ảnh tải lên!";
+      errEl.classList.remove("hidden");
+    }
+  });
+
+  $("btn-import-deck").addEventListener("click", () => $("import-file-input").click());
+  $("import-file-input").addEventListener("change", async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data || !Array.isArray(data.questions) || data.questions.length === 0) {
+        throw new Error("Invalid");
+      }
+      const deckId = `custom-${Date.now()}`;
+      const imported = {
+        id: deckId,
+        title: String(data.title || file.name.replace(/\.json$/i, "")).slice(0, 50),
+        icon: String(data.icon || "📥").slice(0, 6),
+        description: String(data.description || "Đã nhập từ file"),
+        builtIn: false,
+        questions: data.questions.map((q, i) => ({
+          id: i + 1,
+          category: q.category || "Chủ đề",
+          text: String(q.text || ""),
+          optionA: String(q.optionA || "A"),
+          optionB: String(q.optionB || "B"),
+          image: typeof q.image === "string" ? q.image : "",
+        })),
+      };
+      const custom = getCustomDecks();
+      custom.push(imported);
+      saveCustomDecks(custom);
+      selectDeck(deckId);
+    } catch {
+      showOnlineError("File JSON bộ câu hỏi không đúng định dạng!");
+    }
   });
 
   // === ONLINE MODE LOGIC ===
@@ -655,15 +1073,23 @@
 
   function applyOnlineRoomState(rs) {
     state.online.roomState = rs;
+    if (Array.isArray(rs.questions) && rs.questions.length > 0) {
+      state.activeQuestions = rs.questions;
+    }
+    state.activeDeckTitle = rs.deckTitle || "Bộ câu hỏi";
+    state.activeDeckIcon = rs.deckIcon || "❄️";
+
     const isHost = state.online.playerId === "p1";
     const p1Name = rs.players.p1 ? rs.players.p1.name : "Người 1";
     const p2Name = rs.players.p2 ? rs.players.p2.name : "Người 2";
+    const total = state.activeQuestions.length;
 
     $("topbar-room-pill").classList.remove("hidden");
     $("topbar-room-code").textContent = rs.code;
 
     if (rs.phase === "lobby") {
       showView("lobby");
+      $("lobby-deck-badge").textContent = `${state.activeDeckIcon} ${state.activeDeckTitle} • ${total} câu`;
       $("lobby-code").textContent = rs.code;
       $("invite-link").value = `${window.location.origin}/?room=${rs.code}`;
       $("lobby-p1-name").textContent = p1Name;
@@ -674,6 +1100,7 @@
       $("lobby-p2-status").textContent = hasP2 ? "Đã sẵn sàng" : "Đang chờ";
       $("lobby-p2-status").className = `slot-status ${hasP2 ? "ready" : "waiting"}`;
 
+      $("btn-online-start").textContent = `Bắt đầu chơi ${total} câu →`;
       $("btn-online-start").classList.toggle("hidden", !isHost);
       $("btn-online-start").disabled = !hasP2;
       $("lobby-guest-note").classList.toggle("hidden", isHost);
@@ -737,7 +1164,13 @@
     clearOnlineError();
     try {
       const name = $("online-name").value.trim() || "Minh";
-      const res = await postJson("/api/rooms", { playerName: name });
+      const deck = getSelectedDeck();
+      const res = await postJson("/api/rooms", {
+        playerName: name,
+        deckTitle: deck.title,
+        deckIcon: deck.icon,
+        questions: deck.questions,
+      });
       state.online.code = res.code;
       state.online.playerId = res.playerId;
       lastOnlinePhaseKey = "";
@@ -840,6 +1273,7 @@
     $("join-code").value = urlRoom.toUpperCase().slice(0, 4);
   }
 
+  renderDeckList();
   initSnowCanvas();
 })();
 

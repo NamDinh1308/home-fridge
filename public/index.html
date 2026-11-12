@@ -25,7 +25,7 @@
       <span class="brand-icon">❄️</span>
       <div class="brand-text">
         <span class="brand-title">Winter Match</span>
-        <span class="brand-sub">30 Câu Ăn Uống & Hoa Quả</span>
+        <span class="brand-sub">Chọn Bộ Câu Hỏi Đôi</span>
       </div>
     </div>
 
@@ -58,6 +58,18 @@
             <input id="online-name" type="text" maxlength="20" placeholder="Nhập tên hiển thị..." />
           </div>
 
+          <div class="deck-section">
+            <div class="deck-header">
+              <label>Chọn bộ câu hỏi</label>
+              <div class="deck-tools">
+                <button class="mini-btn" id="btn-open-builder" type="button">+ Tạo bộ mới</button>
+                <button class="mini-btn" id="btn-import-deck" type="button">📥 Nhập JSON</button>
+                <input id="import-file-input" type="file" accept=".json,application/json" class="hidden" />
+              </div>
+            </div>
+            <div class="deck-grid" id="deck-list"></div>
+          </div>
+
           <div class="online-actions">
             <button class="primary-btn" id="btn-create-room" type="button">
               ❄️ Tạo phòng mới
@@ -73,10 +85,43 @@
       </div>
     </section>
 
+    <!-- VIEW 1B: CUSTOM DECK BUILDER -->
+    <section class="view" id="view-builder">
+      <div class="builder-card glass-card">
+        <div class="builder-topbar">
+          <h2 id="builder-heading">✨ Tạo Bộ Câu Hỏi Mới</h2>
+          <button class="secondary-btn" id="btn-builder-back" type="button">← Quay lại</button>
+        </div>
+
+        <div class="builder-meta-grid">
+          <div class="field">
+            <label for="builder-icon">Icon</label>
+            <input id="builder-icon" type="text" maxlength="6" value="🥑" />
+          </div>
+          <div class="field">
+            <label for="builder-title">Tên bộ câu hỏi</label>
+            <input id="builder-title" type="text" maxlength="50" placeholder="Ví dụ: Gu Phim Ảnh & Âm Nhạc" />
+          </div>
+          <div class="field builder-desc-field">
+            <label for="builder-desc">Mô tả ngắn</label>
+            <input id="builder-desc" type="text" maxlength="80" placeholder="Ví dụ: 10 câu hỏi nhanh" />
+          </div>
+        </div>
+
+        <div class="builder-questions" id="builder-questions"></div>
+
+        <div class="builder-actions">
+          <button class="secondary-btn" id="btn-add-question" type="button">+ Thêm câu hỏi</button>
+          <button class="primary-btn" id="btn-save-deck" type="button">💾 Lưu bộ câu hỏi</button>
+        </div>
+        <p class="error-msg hidden" id="builder-error"></p>
+      </div>
+    </section>
+
     <!-- VIEW 2: ONLINE LOBBY -->
     <section class="view" id="view-lobby">
       <div class="lobby-card glass-card">
-        <div class="season-badge">☃️ Phòng Chờ Trực Tuyến</div>
+        <div class="season-badge" id="lobby-deck-badge">☃️ Phòng Chờ Trực Tuyến</div>
         <h2>Mã phòng: <span class="room-code-big" id="lobby-code">----</span></h2>
         <p class="lobby-sub">Gửi mã phòng hoặc đường link bên dưới cho người kia cùng vào:</p>
 
@@ -206,7 +251,7 @@
     <!-- VIEW 4: SUMMARY -->
     <section class="view" id="view-summary">
       <div class="summary-card glass-card">
-        <div class="season-badge">❄️ Kết Quả Tổng Kết • 30 Câu</div>
+        <div class="season-badge" id="summary-badge">❄️ Kết Quả Tổng Kết</div>
         <h2 id="summary-title">Độ Hiểu Nhau Của Hai Bạn</h2>
 
         <div class="score-hero">
@@ -231,7 +276,7 @@
         </div>
 
         <div class="filter-bar">
-          <button class="filter-btn active" data-filter="all" type="button">Tất cả (30)</button>
+          <button class="filter-btn active" data-filter="all" type="button" id="filter-all-btn">Tất cả (0)</button>
           <button class="filter-btn" data-filter="match" type="button" id="filter-match-btn">Trùng ý (0)</button>
           <button class="filter-btn" data-filter="diff" type="button" id="filter-diff-btn">Khác biệt (0)</button>
         </div>
