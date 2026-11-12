@@ -210,6 +210,7 @@ const server = http.createServer(async (req, res) => {
         updatedAt: Date.now(),
       };
       rooms.set(code, room);
+      console.log(`🆕 [TẠO PHÒNG] Mã: ${code} | Chủ phòng: "${name}" | Bộ: "${deckTitle}" (${questions.length} câu)`);
       return sendJson(res, 201, { code, playerId: "p1", state: serializeRoomFor(room, "p1") });
     } catch {
       return sendJson(res, 400, { error: "Yêu cầu không hợp lệ" });
@@ -266,6 +267,7 @@ const server = http.createServer(async (req, res) => {
           room.players.p2 = { name };
         }
         broadcastRoom(room);
+        console.log(`👋 [VÀO PHÒNG] Mã: ${code} | Khách: "${name}" đã vào phòng của "${room.players.p1?.name}"`);
         return sendJson(res, 200, { code, playerId: "p2", state: serializeRoomFor(room, "p2") });
       }
 
@@ -277,6 +279,7 @@ const server = http.createServer(async (req, res) => {
         room.currentIndex = 0;
         room.answers = createEmptyAnswers(room.questions.length);
         broadcastRoom(room);
+        console.log(`🎮 [BẮT ĐẦU CHƠI] Mã: ${code} | "${room.players.p1?.name}" & "${room.players.p2?.name}" bắt đầu làm bộ "${room.deckTitle}"`);
         return sendJson(res, 200, { ok: true });
       }
 
@@ -290,6 +293,14 @@ const server = http.createServer(async (req, res) => {
         entry[playerId] = choice;
         if (entry.p1 && entry.p2) {
           room.phase = "reveal";
+          const q = room.questions[room.currentIndex];
+          const isMatch = entry.p1 === entry.p2;
+          const icon = isMatch ? "✅ TRÙNG Ý" : "❌ KHÁC BIỆT";
+          const p1 = room.players.p1?.name || "P1";
+          const p2 = room.players.p2?.name || "P2";
+          const a1 = entry.p1 === "A" ? q.optionA : q.optionB;
+          const a2 = entry.p2 === "A" ? q.optionA : q.optionB;
+          console.log(`[CÂU ${room.currentIndex + 1}/${room.questions.length}] [${code}] ${icon} | ${p1}: [${entry.p1}] "${a1}" | ${p2}: [${entry.p2}] "${a2}"`);
         }
         broadcastRoom(room);
         return sendJson(res, 200, { ok: true });
@@ -301,6 +312,17 @@ const server = http.createServer(async (req, res) => {
         }
         if (room.currentIndex + 1 >= room.questions.length) {
           room.phase = "summary";
+          const matches = room.answers.filter((a) => a.p1 && a.p2 && a.p1 === a.p2).length;
+          const total = room.questions.length;
+          const pct = Math.round((matches / total) * 100);
+          const p1 = room.players.p1?.name || "P1";
+          const p2 = room.players.p2?.name || "P2";
+          console.log(`\n========================================`);
+          console.log(`🏆 [KẾT QUẢ VÁN ĐẤU] Mã phòng: ${code}`);
+          console.log(`👥 Hai người chơi: "${p1}" & "${p2}"`);
+          console.log(`📚 Bộ câu hỏi: ${room.deckTitle} (${total} câu)`);
+          console.log(`🎯 Tỷ lệ trùng khớp: ${matches}/${total} (${pct}%)`);
+          console.log(`========================================\n`);
         } else {
           room.currentIndex += 1;
           room.phase = "question";
@@ -314,6 +336,7 @@ const server = http.createServer(async (req, res) => {
         room.currentIndex = 0;
         room.answers = createEmptyAnswers(room.questions.length);
         broadcastRoom(room);
+        console.log(`🔄 [CHƠI LẠI] Mã: ${code} | "${room.players.p1?.name}" & "${room.players.p2?.name}" bắt đầu lại từ đầu`);
         return sendJson(res, 200, { ok: true });
       }
 
