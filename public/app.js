@@ -20,18 +20,8 @@
 
   // === STATE ===
   const state = {
-    mode: "local", // "local" | "online"
     sfxEnabled: true,
     musicEnabled: false,
-
-    // Local mode state
-    local: {
-      p1Name: "Minh",
-      p2Name: "Linh",
-      currentIndex: 0,
-      turn: "p1", // "p1" | "p2" | "reveal"
-      answers: [], // [{ p1, p2 }]
-    },
 
     // Online mode state
     online: {
@@ -360,16 +350,6 @@
     tick();
   }
 
-  // === HOME TABS ===
-  document.querySelectorAll(".mode-tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const mode = tab.dataset.mode;
-      document.querySelectorAll(".mode-tab").forEach((t) => t.classList.toggle("active", t === tab));
-      $("panel-local").classList.toggle("active", mode === "local");
-      $("panel-online").classList.toggle("active", mode === "online");
-    });
-  });
-
   function resetToHome() {
     if (state.online.eventSource) {
       state.online.eventSource.close();
@@ -444,22 +424,18 @@
     const chipP2 = $("chip-p2");
     chipP1.classList.toggle("locked", p1Locked);
     chipP2.classList.toggle("locked", p2Locked);
-    chipP1.classList.toggle("active-turn", !revealed && !p1Locked && state.mode === "local" && state.local.turn === "p1");
-    chipP2.classList.toggle("active-turn", !revealed && !p2Locked && state.mode === "local" && state.local.turn === "p2");
+    chipP1.classList.toggle("active-turn", !revealed && !p1Locked && state.online.playerId === "p1");
+    chipP2.classList.toggle("active-turn", !revealed && !p2Locked && state.online.playerId === "p2");
 
     $("chip-p1-state").textContent = revealed
       ? `Chọn ${p1Choice}`
       : p1Locked
       ? "Đã khóa ✓"
-      : state.mode === "local" && state.local.turn !== "p1"
-      ? "Chờ lượt"
       : "Đang chọn...";
     $("chip-p2-state").textContent = revealed
       ? `Chọn ${p2Choice}`
       : p2Locked
       ? "Đã khóa ✓"
-      : state.mode === "local" && state.local.turn !== "p2"
-      ? "Chờ lượt"
       : "Đang chọn...";
 
     $("turn-center-status").textContent = centerHint;
@@ -639,88 +615,6 @@
     });
   });
 
-  // === LOCAL MODE LOGIC ===
-  let lastRenderedLocalIdx = -1;
-
-  function startLocalGame() {
-    state.mode = "local";
-    state.local.p1Name = $("local-p1").value.trim() || "Người 1";
-    state.local.p2Name = $("local-p2").value.trim() || "Người 2";
-    state.local.currentIndex = 0;
-    state.local.turn = "p1";
-    state.local.answers = Array.from({ length: TOTAL }, () => ({ p1: null, p2: null }));
-    lastRenderedLocalIdx = -1;
-    $("topbar-room-pill").classList.add("hidden");
-    showView("game");
-    updateLocalView();
-  }
-
-  function updateLocalView() {
-    const loc = state.local;
-    const idx = loc.currentIndex;
-    const ans = loc.answers[idx];
-    const revealed = loc.turn === "reveal";
-    const isNew = idx !== lastRenderedLocalIdx;
-    lastRenderedLocalIdx = idx;
-
-    const hint =
-      loc.turn === "p1"
-        ? `❄️ Lượt của ${loc.p1Name}`
-        : loc.turn === "p2"
-        ? `🧣 Lượt của ${loc.p2Name}`
-        : "✨ Kết quả";
-
-    renderGameplay({
-      index: idx,
-      p1Name: loc.p1Name,
-      p2Name: loc.p2Name,
-      p1Locked: Boolean(ans.p1),
-      p2Locked: Boolean(ans.p2),
-      p1Choice: ans.p1,
-      p2Choice: ans.p2,
-      revealed,
-      myChoice: null,
-      canClick: !revealed,
-      centerHint: hint,
-      matchesSoFar: countMatches(loc.answers, revealed ? idx + 1 : idx),
-      isNewQuestion: isNew,
-    });
-  }
-
-  function handleLocalPick(choice) {
-    const loc = state.local;
-    const ans = loc.answers[loc.currentIndex];
-    if (loc.turn === "p1") {
-      ans.p1 = choice;
-      loc.turn = "p2";
-      playSound("lock");
-      updateLocalView();
-    } else if (loc.turn === "p2") {
-      ans.p2 = choice;
-      loc.turn = "reveal";
-      updateLocalView();
-      if (ans.p1 === ans.p2) {
-        playSound("match");
-        burstSnowConfetti(34);
-      } else {
-        playSound("diff");
-      }
-    }
-  }
-
-  function handleLocalNext() {
-    const loc = state.local;
-    if (loc.currentIndex + 1 >= TOTAL) {
-      renderSummary(loc.p1Name, loc.p2Name, loc.answers);
-    } else {
-      loc.currentIndex += 1;
-      loc.turn = "p1";
-      updateLocalView();
-    }
-  }
-
-  $("btn-start-local").addEventListener("click", startLocalGame);
-
   // === ONLINE MODE LOGIC ===
   let lastOnlinePhaseKey = "";
 
@@ -844,7 +738,6 @@
     try {
       const name = $("online-name").value.trim() || "Minh";
       const res = await postJson("/api/rooms", { playerName: name });
-      state.mode = "online";
       state.online.code = res.code;
       state.online.playerId = res.playerId;
       lastOnlinePhaseKey = "";
@@ -864,7 +757,6 @@
       }
       const name = $("online-name").value.trim() || "Linh";
       const res = await postJson(`/api/rooms/${code}/join`, { playerName: name });
-      state.mode = "online";
       state.online.code = res.code;
       state.online.playerId = res.playerId;
       lastOnlinePhaseKey = "";
@@ -896,18 +788,14 @@
 
   // === OPTION CLICK & NEXT CLICK ===
   async function onPick(choice) {
-    if (state.mode === "local") {
-      handleLocalPick(choice);
-    } else {
-      playSound("lock");
-      try {
-        await postJson(`/api/rooms/${state.online.code}/answer`, {
-          playerId: state.online.playerId,
-          choice,
-        });
-      } catch (err) {
-        console.error(err);
-      }
+    playSound("lock");
+    try {
+      await postJson(`/api/rooms/${state.online.code}/answer`, {
+        playerId: state.online.playerId,
+        choice,
+      });
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -915,26 +803,18 @@
   $("btn-opt-b").addEventListener("click", () => onPick("B"));
 
   $("btn-next").addEventListener("click", async () => {
-    if (state.mode === "local") {
-      handleLocalNext();
-    } else {
-      try {
-        await postJson(`/api/rooms/${state.online.code}/next`, {});
-      } catch (err) {
-        console.error(err);
-      }
+    try {
+      await postJson(`/api/rooms/${state.online.code}/next`, {});
+    } catch (err) {
+      console.error(err);
     }
   });
 
   $("btn-replay").addEventListener("click", async () => {
-    if (state.mode === "local") {
-      startLocalGame();
-    } else {
-      try {
-        await postJson(`/api/rooms/${state.online.code}/restart`, {});
-      } catch (err) {
-        console.error(err);
-      }
+    try {
+      await postJson(`/api/rooms/${state.online.code}/restart`, {});
+    } catch (err) {
+      console.error(err);
     }
   });
 
@@ -953,11 +833,10 @@
     }
   });
 
-  // Auto-switch to Online tab if ?room=XXXX is in URL
+  // Auto-fill room code if ?room=XXXX is in URL
   const params = new URLSearchParams(window.location.search);
   const urlRoom = params.get("room");
   if (urlRoom) {
-    document.querySelector('.mode-tab[data-mode="online"]').click();
     $("join-code").value = urlRoom.toUpperCase().slice(0, 4);
   }
 
