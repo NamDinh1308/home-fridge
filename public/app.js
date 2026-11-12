@@ -57,7 +57,7 @@
 
   // === WEB AUDIO API (SFX) & MP3 BACKGROUND MUSIC ===
   let audioCtx = null;
-  const bgAudio = new Audio("/bg-music.mp3");
+  const bgAudio = new Audio("/bg-music.mp3?v=2");
   bgAudio.loop = true;
   bgAudio.volume = 0.45;
   bgAudio.preload = "auto";
