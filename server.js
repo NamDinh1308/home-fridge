@@ -18,6 +18,7 @@ const MIME_TYPES = {
   ".png": "image/png",
   ".svg": "image/svg+xml",
   ".ico": "image/x-icon",
+  ".mp3": "audio/mpeg",
 };
 
 const rooms = new Map();
@@ -107,7 +108,7 @@ function createEmptyAnswers() {
   return Array.from({ length: TOTAL_QUESTIONS }, () => ({ p1: null, p2: null }));
 }
 
-function serveStaticFile(res, baseDir, relPath) {
+function serveStaticFile(req, res, baseDir, relPath) {
   const safePath = path.normalize(relPath).replace(/^(\.\.[/\\])+/, "");
   const fullPath = path.join(baseDir, safePath);
   if (!fullPath.startsWith(baseDir)) {
@@ -115,18 +116,44 @@ function serveStaticFile(res, baseDir, relPath) {
     res.end("Forbidden");
     return;
   }
-  fs.readFile(fullPath, (err, content) => {
-    if (err) {
+  fs.stat(fullPath, (err, stat) => {
+    if (err || !stat.isFile()) {
       res.writeHead(404);
       res.end("Not found");
       return;
     }
     const ext = path.extname(fullPath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || "application/octet-stream";
+    const cacheControl = ext === ".jpg" || ext === ".mp3" ? "public, max-age=86400" : "no-cache";
+    const range = req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+      if (Number.isNaN(start) || start >= stat.size || end >= stat.size || start > end) {
+        res.writeHead(416, { "Content-Range": `bytes */${stat.size}` });
+        res.end();
+        return;
+      }
+      res.writeHead(206, {
+        "Content-Range": `bytes ${start}-${end}/${stat.size}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": end - start + 1,
+        "Content-Type": contentType,
+        "Cache-Control": cacheControl,
+      });
+      fs.createReadStream(fullPath, { start, end }).pipe(res);
+      return;
+    }
+
     res.writeHead(200, {
-      "Content-Type": MIME_TYPES[ext] || "application/octet-stream",
-      "Cache-Control": ext === ".jpg" ? "public, max-age=86400" : "no-cache",
+      "Content-Type": contentType,
+      "Content-Length": stat.size,
+      "Accept-Ranges": "bytes",
+      "Cache-Control": cacheControl,
     });
-    res.end(content);
+    fs.createReadStream(fullPath).pipe(res);
   });
 }
 
@@ -276,12 +303,12 @@ const server = http.createServer(async (req, res) => {
   // Static images from kahoot_images
   if (pathname.startsWith("/images/")) {
     const fileName = decodeURIComponent(pathname.slice("/images/".length));
-    return serveStaticFile(res, IMAGES_DIR, fileName);
+    return serveStaticFile(req, res, IMAGES_DIR, fileName);
   }
 
   // Static public files
   const rel = pathname === "/" ? "index.html" : decodeURIComponent(pathname.slice(1));
-  return serveStaticFile(res, PUBLIC_DIR, rel);
+  return serveStaticFile(req, res, PUBLIC_DIR, rel);
 });
 
 server.listen(PORT, "0.0.0.0", () => {

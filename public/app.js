@@ -45,9 +45,12 @@
     reviewFilter: "all",
   };
 
-  // === WEB AUDIO API: SFX & WINTER MUSIC BOX ===
+  // === WEB AUDIO API (SFX) & MP3 BACKGROUND MUSIC ===
   let audioCtx = null;
-  let musicTimer = null;
+  const bgAudio = new Audio("/bg-music.mp3");
+  bgAudio.loop = true;
+  bgAudio.volume = 0.45;
+  bgAudio.preload = "auto";
 
   function ensureAudio() {
     if (!audioCtx) {
@@ -98,53 +101,23 @@
     }
   }
 
-  const WINTER_NOTES = [
-    659.25, 783.99, 1046.5, 987.77, 783.99, 659.25,
-    587.33, 659.25, 880.0, 783.99, 659.25, 523.25,
-    587.33, 783.99, 987.77, 880.0, 783.99, 659.25,
-    523.25, 659.25, 783.99, 1046.5, 880.0, 783.99,
-  ];
-  let noteStep = 0;
-
-  function playMusicNote(freq) {
-    const ctx = ensureAudio();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(freq, now);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.032, now + 0.03);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.9);
-  }
-
   function updateMusicButton() {
     $("btn-music").classList.toggle("active", state.musicEnabled);
     $("music-label").textContent = state.musicEnabled ? "Nhạc: Bật" : "Nhạc: Tắt";
   }
 
-  $("btn-music").addEventListener("click", () => {
+  $("btn-music").addEventListener("click", async () => {
     state.musicEnabled = !state.musicEnabled;
     updateMusicButton();
     if (state.musicEnabled) {
-      ensureAudio();
-      if (!musicTimer) {
-        playMusicNote(WINTER_NOTES[noteStep % WINTER_NOTES.length]);
-        noteStep++;
-        musicTimer = setInterval(() => {
-          if (!state.musicEnabled) return;
-          playMusicNote(WINTER_NOTES[noteStep % WINTER_NOTES.length]);
-          noteStep++;
-        }, 560);
+      try {
+        await bgAudio.play();
+      } catch {
+        state.musicEnabled = false;
+        updateMusicButton();
       }
-    } else if (musicTimer) {
-      clearInterval(musicTimer);
-      musicTimer = null;
+    } else {
+      bgAudio.pause();
     }
   });
 
