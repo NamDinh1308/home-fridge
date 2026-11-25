@@ -57,7 +57,7 @@
 
   // === WEB AUDIO API (SFX) & MP3 BACKGROUND MUSIC ===
   let audioCtx = null;
-  const bgAudio = new Audio("/bg-music.mp3?v=2");
+  const bgAudio = new Audio("/bg-music.mp3?v=3");
   bgAudio.loop = true;
   bgAudio.volume = 0.45;
   bgAudio.preload = "auto";
@@ -1005,24 +1005,43 @@
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      if (!data || !Array.isArray(data.questions) || data.questions.length === 0) {
-        throw new Error("Invalid");
+      const rawQuestions = Array.isArray(data)
+        ? data
+        : Array.isArray(data && data.questions)
+        ? data.questions
+        : [];
+
+      if (!rawQuestions || rawQuestions.length === 0) {
+        throw new Error("Invalid: questions array is empty");
       }
+
+      const defaultTitle = file.name
+        .replace(/\.json$/i, "")
+        .replace(/^bo_(\d+)_cau_hoi_/i, "Bộ $1 Câu Hỏi ")
+        .replace(/_/g, " ");
+
       const deckId = `custom-${Date.now()}`;
       const imported = {
         id: deckId,
-        title: String(data.title || file.name.replace(/\.json$/i, "")).slice(0, 50),
-        icon: String(data.icon || "📥").slice(0, 6),
-        description: String(data.description || "Đã nhập từ file"),
+        title: String((data && data.title) || defaultTitle).slice(0, 50),
+        icon: String((data && data.icon) || "🎒").slice(0, 6),
+        description: String((data && data.description) || `Đã nhập ${rawQuestions.length} câu từ file`),
         builtIn: false,
-        questions: data.questions.map((q, i) => ({
-          id: i + 1,
-          category: q.category || "Chủ đề",
-          text: String(q.text || ""),
-          optionA: String(q.optionA || "A"),
-          optionB: String(q.optionB || "B"),
-          image: typeof q.image === "string" ? q.image : "",
-        })),
+        questions: rawQuestions.map((q, i) => {
+          const qText = String(q.text || q.cau_hoi || q.question || q.content || "").trim();
+          const optA = String(q.optionA || q.lua_chon_a || q.a || q.choiceA || "Lựa chọn A").trim();
+          const optB = String(q.optionB || q.lua_chon_b || q.b || q.choiceB || "Lựa chọn B").trim();
+          const cat = String(q.category || q.chu_de || q.danh_muc || "Chủ đề").trim();
+          const img = typeof q.image === "string" ? q.image : (typeof q.hinh_anh === "string" ? q.hinh_anh : "");
+          return {
+            id: i + 1,
+            category: cat || "Chủ đề",
+            text: qText || `Câu ${i + 1}`,
+            optionA: optA || "A",
+            optionB: optB || "B",
+            image: img,
+          };
+        }),
       };
       const custom = getCustomDecks();
       custom.push(imported);
